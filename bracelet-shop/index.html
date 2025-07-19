@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handmade Bracelets by [Daughter's Name]</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>✨ Handmade Bracelets ✨</h1>
+            <p>Beautiful bracelets made with love</p>
+            <div class="cart-icon" onclick="toggleCart()">
+                🛒 Cart (<span id="cart-count">0</span>)
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h2>Welcome to my bracelet shop! 💖</h2>
+            <p>Each bracelet is carefully handmade with colorful beads and lots of love. Perfect for gifts or treating yourself!</p>
+        </section>
+
+        <section class="products" id="products">
+            <h2>Our Beautiful Bracelets</h2>
+            <div class="product-grid">
+                <!-- Products will be added here -->
+            </div>
+        </section>
+
+        <section class="about">
+            <h2>About Our Bracelets</h2>
+            <p>Hi! I'm a 12-year-old artist who loves making beautiful jewelry. Each bracelet is unique and made with high-quality beads. I hope you love wearing them as much as I love making them!</p>
+        </section>
+
+        <section class="contact" id="contact">
+            <h2>Place Your Order</h2>
+            <form id="order-form">
+                <div class="form-group">
+                    <label for="name">Your Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone">
+                </div>
+                <div class="form-group">
+                    <label for="order-details">Order Details:</label>
+                    <textarea id="order-details" name="order-details" rows="4" placeholder="Tell us which bracelets you'd like and any special requests!"></textarea>
+                </div>
+                <button type="submit">Send Order 💕</button>
+            </form>
+        </section>
+    </main>
+
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="toggleCart()">&times;</span>
+            <h3>Your Cart</h3>
+            <div id="cart-items"></div>
+            <div class="cart-total">
+                <strong>Total: $<span id="cart-total">0.00</span></strong>
+            </div>
+            <button onclick="proceedToPayment()" class="checkout-btn">Pay with Card 💳</button>
+            <button onclick="checkout()" class="checkout-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); margin-top: 0.5rem;">Order via Email 📧</button>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePaymentModal()">&times;</span>
+            <h3>Complete Your Purchase 💳</h3>
+            
+            <div id="order-summary">
+                <!-- Order summary will be populated here -->
+            </div>
+            
+            <form id="payment-form">
+                <h4 style="color: #667eea; margin-bottom: 1rem;">Contact Information</h4>
+                <div class="form-group">
+                    <label for="customer-name">Full Name:</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Email:</label>
+                    <input type="email" id="customer-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Phone (optional):</label>
+                    <input type="tel" id="customer-phone">
+                </div>
+                
+                <h4 style="color: #667eea; margin: 1.5rem 0 1rem 0;">Billing Address</h4>
+                <div class="form-group">
+                    <label for="billing-street">Street Address:</label>
+                    <input type="text" id="billing-street" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="billing-city">City:</label>
+                        <input type="text" id="billing-city" required>
+                    </div>
+                    <div class="form-group form-group-half">
+                        <label for="billing-state">State:</label>
+                        <input type="text" id="billing-state" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="billing-zip">ZIP Code:</label>
+                        <input type="text" id="billing-zip" required>
+                    </div>
+                    <div class="form-group form-group-half">
+                        <label for="billing-country">Country:</label>
+                        <select id="billing-country" required>
+                            <option value="US">United States</option>
+                            <option value="CA">Canada</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="AU">Australia</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <h4 style="color: #667eea; margin: 1.5rem 0 1rem 0;">Shipping Address</h4>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="same-as-billing" onchange="toggleShippingAddress()">
+                        <span class="checkmark"></span>
+                        Same as billing address
+                    </label>
+                </div>
+                
+                <div id="shipping-fields">
+                    <div class="form-group">
+                        <label for="shipping-street">Street Address:</label>
+                        <input type="text" id="shipping-street" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-group-half">
+                            <label for="shipping-city">City:</label>
+                            <input type="text" id="shipping-city" required>
+                        </div>
+                        <div class="form-group form-group-half">
+                            <label for="shipping-state">State:</label>
+                            <input type="text" id="shipping-state" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-group-half">
+                            <label for="shipping-zip">ZIP Code:</label>
+                            <input type="text" id="shipping-zip" required>
+                        </div>
+                        <div class="form-group form-group-half">
+                            <label for="shipping-country">Country:</label>
+                            <select id="shipping-country" required>
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="AU">Australia</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 style="color: #667eea; margin: 1.5rem 0 1rem 0;">Payment Information</h4>
+                <div class="form-group">
+                    <div id="card-element">
+                        <!-- Stripe Elements will create form elements here -->
+                    </div>
+                    <div id="card-errors" role="alert"></div>
+                </div>
+                
+                <button type="submit" id="submit-payment" class="checkout-btn">
+                    <span id="payment-btn-text">Complete Payment</span>
+                    <span id="payment-spinner" style="display: none;">Processing...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Handmade Bracelets. Made with 💖 by [Daughter's Name]</p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">
+                <a href="admin/login.html" style="color: rgba(255,255,255,0.7); text-decoration: none;">Admin</a>
+            </p>
+        </div>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

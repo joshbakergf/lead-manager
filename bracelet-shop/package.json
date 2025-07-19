@@ -1,0 +1,21 @@
+{
+  "name": "bracelet-shop",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Handmade bracelet e-commerce website",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && cp -r admin dist/",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vercel/edge-config": "^1.1.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "keywords": ["ecommerce", "handmade", "bracelets", "jewelry"],
+  "author": "Bracelet Shop",
+  "license": "MIT"
+}
