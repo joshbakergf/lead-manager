@@ -279,11 +279,14 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
               required={field.required}
             >
               <option value="">Select an option...</option>
-              {(field.options || field.choices)?.map((option) => (
-                <option key={choice.id} value={choice.id}>
-                  {option.text || option.label}
-                </option>
-              ))}
+              {(field.options || field.choices)?.map((option, index) => {
+                const optionId = typeof option === 'string' ? `option-${index}` : option.id;
+                const optionValue = typeof option === 'string' ? option : option.text;
+                return (
+                <option key={optionId} value={optionValue}>
+                  {typeof option === 'string' ? option : (option.text || option.label)}
+                </option>);
+              })}
             </select>
           </div>
         );
@@ -402,7 +405,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
               type="text"
               placeholder={page.placeholder}
               value={formData[page.id] || ''}
-              onChange={(e) => handleInputChange(e.target.value)}
+              onChange={(e) => handleLegacyInputChange(e.target.value)}
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
@@ -441,13 +444,13 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {page.choices?.map((choice) => (
                 <label 
-                  key={option.id} 
+                  key={choice.id} 
                   style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
                 >
                   <input
                     type="radio"
                     name={page.id}
-                    value={option.id}
+                    value={choice.id}
                     checked={formData[page.id] === choice.id}
                     onChange={(e) => handleLegacyInputChange(e.target.value)}
                     style={{ 
@@ -456,7 +459,7 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
                       accentColor: '#4285f4'
                     }}
                   />
-                  <span style={{ color: '#e2e8f0' }}>{option.text || option.label}</span>
+                  <span style={{ color: '#e2e8f0' }}>{choice.text || choice.label}</span>
                 </label>
               ))}
             </div>
