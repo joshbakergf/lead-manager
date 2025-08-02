@@ -1,0 +1,271 @@
+.content-editor {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.toolbar-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.toolbar-btn:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.toolbar-btn:active {
+  background-color: #dee2e6;
+}
+
+.toolbar-select {
+  padding: 6px 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  cursor: pointer;
+  color: #333;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #dee2e6;
+  margin: 0 4px;
+}
+
+.editor-content {
+  min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 15px;
+  font-size: 15px;
+  line-height: 1.6;
+  outline: none;
+  background-color: white;
+  color: #333333; /* Ensure dark text by default */
+}
+
+.editor-content:empty::before {
+  content: attr(data-placeholder);
+  color: #6c757d;
+  font-style: italic;
+  pointer-events: none;
+}
+
+/* Make sure all text elements have proper color inheritance */
+.editor-content * {
+  color: inherit;
+}
+
+.editor-content p {
+  margin: 0.5em 0;
+  color: inherit;
+}
+
+.editor-content h1 {
+  font-size: 2em;
+  margin: 0.5em 0;
+  font-weight: bold;
+  color: inherit;
+}
+
+.editor-content h2 {
+  font-size: 1.5em;
+  margin: 0.5em 0;
+  font-weight: bold;
+  color: inherit;
+}
+
+.editor-content h3 {
+  font-size: 1.17em;
+  margin: 0.5em 0;
+  font-weight: bold;
+  color: inherit;
+}
+
+.editor-content blockquote {
+  margin: 1em 0;
+  padding-left: 20px;
+  border-left: 4px solid #e9ecef;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.editor-content ul, .editor-content ol {
+  margin: 1em 0;
+  padding-left: 30px;
+  color: inherit;
+}
+
+.editor-content li {
+  margin: 0.5em 0;
+  color: inherit;
+}
+
+.editor-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  color: inherit;
+}
+
+.editor-content table th,
+.editor-content table td {
+  border: 1px solid #dee2e6;
+  padding: 12px;
+  text-align: left;
+  color: inherit;
+  background-color: transparent;
+}
+
+.editor-content table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: inherit;
+}
+
+.editor-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+}
+
+.editor-content a {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.editor-content a:hover {
+  color: #0056b3;
+}
+
+/* Better table editing experience */
+.editor-content table td:focus,
+.editor-content table th:focus {
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Content block element styles for preview - ensure dark text */
+.content-block-element {
+  margin: 15px 0;
+  line-height: 1.6;
+  color: #333333; /* Force dark text in preview */
+}
+
+.content-block-element * {
+  color: inherit;
+}
+
+.content-block-element h1,
+.content-block-element h2,
+.content-block-element h3,
+.content-block-element h4,
+.content-block-element h5,
+.content-block-element h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+  line-height: 1.3;
+  color: inherit;
+}
+
+.content-block-element h1 { font-size: 2em; }
+.content-block-element h2 { font-size: 1.5em; }
+.content-block-element h3 { font-size: 1.17em; }
+
+.content-block-element p {
+  margin: 1em 0;
+  color: inherit;
+}
+
+.content-block-element ul,
+.content-block-element ol {
+  margin: 1em 0;
+  padding-left: 30px;
+  color: inherit;
+}
+
+.content-block-element li {
+  margin: 0.5em 0;
+  color: inherit;
+}
+
+.content-block-element blockquote {
+  margin: 1em 0;
+  padding: 15px 20px;
+  border-left: 4px solid #e9ecef;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.content-block-element table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  color: inherit;
+}
+
+.content-block-element table th,
+.content-block-element table td {
+  border: 1px solid #dee2e6;
+  padding: 12px;
+  text-align: left;
+  color: inherit;
+}
+
+.content-block-element table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: inherit;
+}
+
+.content-block-element img {
+  max-width: 100%;
+  height: auto;
+  margin: 15px 0;
+  border-radius: 4px;
+}
+
+.content-block-element a {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.content-block-element a:hover {
+  color: #0056b3;
+}
+
+/* Ensure proper text rendering in forms */
+.form-field .content-block-element {
+  color: #333333;
+}
+
+.form-field .content-block-element * {
+  color: inherit;
+}

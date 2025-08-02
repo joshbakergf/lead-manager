@@ -1,0 +1,439 @@
+/* Dashboard wrapper to override main-content styles */
+.dashboard-wrapper {
+  background: #1a1a1a !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+.main-content .dashboard {
+  padding: 24px;
+  width: 100%;
+  min-height: auto; /* Let content determine height */
+  background-color: #1a1a1a !important; /* Dark theme background */
+  color: #ffffff !important; /* Dark theme text */
+  overflow: visible; /* Allow natural scrolling */
+}
+
+.dashboard-header {
+  margin-bottom: 32px;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff; /* Dark theme text */
+  margin: 0 0 8px 0;
+}
+
+.dashboard-header p {
+  font-size: 1.1rem;
+  color: #b3b3b3; /* Dark theme secondary text */
+  margin: 0;
+}
+
+/* Loading and Error States */
+.dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #b3b3b3;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #333333;
+  border-top: 4px solid #0088FE;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dashboard-error {
+  text-align: center;
+  padding: 40px;
+  color: #ff6b6b;
+  font-size: 1.1rem;
+}
+
+/* Filters */
+.dashboard-filters {
+  background: #2d2d2d; /* Dark theme card background */
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 8px 12px;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 120px;
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: #0088FE;
+  box-shadow: 0 0 0 3px rgba(0, 136, 254, 0.2);
+}
+
+/* Metrics Cards */
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+.metric-card {
+  background: #2d2d2d; /* Dark theme card background */
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #404040;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+  border-color: #0088FE;
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0088FE, #00C49F);
+  color: white;
+  flex-shrink: 0;
+}
+
+.metric-content h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  line-height: 1;
+}
+
+.metric-content p {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Main Chart */
+.dashboard-chart {
+  background: #2d2d2d; /* Dark theme card background */
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid #404040;
+  width: 100%;
+  overflow: visible; /* Allow charts to display properly */
+  height: auto; /* Let content determine height */
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chart-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  color: #b3b3b3;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-btn:hover {
+  background: #333333;
+  border-color: #0088FE;
+  color: #ffffff;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.dashboard-card {
+  background: #2d2d2d; /* Dark theme card background */
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid #404040;
+  overflow: visible; /* Allow charts to display properly */
+  height: auto; /* Let content determine height */
+}
+
+.dashboard-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 20px 0;
+}
+
+.dashboard-card .recharts-responsive-container {
+  min-height: 280px !important;
+  margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .dashboard {
+    padding: 20px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard {
+    padding: 16px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-card {
+    height: auto;
+  }
+  
+  .dashboard-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 12px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 2rem;
+  }
+  
+  .dashboard-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .metric-card {
+    padding: 20px;
+  }
+  
+  .dashboard-chart,
+  .dashboard-card {
+    padding: 16px;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 8px;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .filter-group input,
+  .filter-group select {
+    min-width: unset;
+    width: 100%;
+  }
+  
+  .metric-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .metric-content h3 {
+    font-size: 1.75rem;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Chart Customizations for Dark Theme */
+.recharts-default-tooltip {
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.recharts-tooltip-label {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.recharts-tooltip-item {
+  color: #b3b3b3 !important;
+}
+
+.recharts-legend-wrapper {
+  padding-top: 20px !important;
+}
+
+.recharts-legend-item-text {
+  color: #b3b3b3 !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 12px !important;
+  fill: #b3b3b3 !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #404040 !important;
+}
+
+.recharts-pie-label-text {
+  font-size: 12px !important;
+  fill: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* Ensure charts are responsive */
+.recharts-responsive-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Fix any layout issues */
+.dashboard * {
+  box-sizing: border-box;
+}
+
+/* Ensure full width usage */
+.dashboard,
+.dashboard-filters,
+.dashboard-metrics,
+.dashboard-chart,
+.dashboard-grid {
+  max-width: 100%;
+}
+
+/* Custom scrollbar for better UX */
+.dashboard::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dashboard::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.dashboard::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 4px;
+}
+
+.dashboard::-webkit-scrollbar-thumb:hover {
+  background: #0088FE;
+}
