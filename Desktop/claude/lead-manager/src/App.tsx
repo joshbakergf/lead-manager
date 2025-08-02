@@ -150,7 +150,11 @@ const SortableFieldItem = React.memo<{
     
     // Initialize options for dropdown and multiple-choice fields
     if ((newType === 'dropdown' || newType === 'multiple-choice') && !field.options) {
-      updates.options = ['Option 1', 'Option 2', 'Option 3'];
+      updates.options = [
+        { id: `option-${Date.now()}-0`, text: 'Option 1' },
+        { id: `option-${Date.now()}-1`, text: 'Option 2' },
+        { id: `option-${Date.now()}-2`, text: 'Option 3' }
+      ];
     }
     
     onUpdateField(selectedPageId, field.id, updates);
