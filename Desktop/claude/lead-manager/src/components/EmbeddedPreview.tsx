@@ -195,16 +195,16 @@ export const EmbeddedPreview: React.FC<EmbeddedPreviewProps> = ({ pages, logicRu
                     <div className="radio-group">
                       {(field.options || field.choices)?.map((option, index) => {
                         const optionId = typeof option === 'string' ? `option-${index}` : option.id;
-                        const optionValue = typeof option === 'string' ? option : option.text;
+                        const optionText = typeof option === 'string' ? option : option.text;
                         return (
                         <div key={optionId} className="radio-wrapper">
                           <input
                             id={`${field.id}-${optionId}`}
                             type="radio"
                             name={field.id}
-                            value={optionValue}
-                            checked={formData[field.id] === optionValue}
-                            onChange={() => handleFieldChange(field.id, optionValue)}
+                            value={optionId}
+                            checked={formData[field.id] === optionId}
+                            onChange={() => handleFieldChange(field.id, optionId)}
                             className="field-radio"
                             disabled
                           />
@@ -227,9 +227,9 @@ export const EmbeddedPreview: React.FC<EmbeddedPreviewProps> = ({ pages, logicRu
                       <option value="">Choose an option</option>
                       {(field.options || field.choices)?.map((option, index) => {
                         const optionId = typeof option === 'string' ? `option-${index}` : option.id;
-                        const optionValue = typeof option === 'string' ? option : option.text;
+                        const optionText = typeof option === 'string' ? option : option.text;
                         return (
-                        <option key={optionId} value={optionValue}>
+                        <option key={optionId} value={optionId}>
                           {typeof option === 'string' ? option : (option.text || option.label)}
                         </option>)
                       })}
