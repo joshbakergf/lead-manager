@@ -193,23 +193,26 @@ export const EmbeddedPreview: React.FC<EmbeddedPreviewProps> = ({ pages, logicRu
 
                   {(field.type === 'radio' || field.type === 'multiple-choice') && (field.choices || field.options) && (
                     <div className="radio-group">
-                      {(field.options || field.choices)?.map(option => (
-                        <div key={option.id} className="radio-wrapper">
+                      {(field.options || field.choices)?.map((option, index) => {
+                        const optionId = typeof option === 'string' ? `option-${index}` : option.id;
+                        const optionValue = typeof option === 'string' ? option : option.text;
+                        return (
+                        <div key={optionId} className="radio-wrapper">
                           <input
-                            id={`${field.id}-${option.id}`}
+                            id={`${field.id}-${optionId}`}
                             type="radio"
                             name={field.id}
-                            value={option.id}
-                            checked={formData[field.id] === option.id}
-                            onChange={() => handleFieldChange(field.id, option.id)}
+                            value={optionValue}
+                            checked={formData[field.id] === optionValue}
+                            onChange={() => handleFieldChange(field.id, optionValue)}
                             className="field-radio"
                             disabled
                           />
-                          <label htmlFor={`${field.id}-${option.id}`} className="radio-label">
-                            {option.text || option.label}
+                          <label htmlFor={`${field.id}-${optionId}`} className="radio-label">
+                            {typeof option === 'string' ? option : (option.text || option.label)}
                           </label>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
 
@@ -222,11 +225,14 @@ export const EmbeddedPreview: React.FC<EmbeddedPreviewProps> = ({ pages, logicRu
                       disabled
                     >
                       <option value="">Choose an option</option>
-                      {(field.options || field.choices)?.map(option => (
-                        <option key={option.id} value={option.id}>
-                          {option.text || option.label}
-                        </option>
-                      ))}
+                      {(field.options || field.choices)?.map((option, index) => {
+                        const optionId = typeof option === 'string' ? `option-${index}` : option.id;
+                        const optionValue = typeof option === 'string' ? option : option.text;
+                        return (
+                        <option key={optionId} value={optionValue}>
+                          {typeof option === 'string' ? option : (option.text || option.label)}
+                        </option>)
+                      })}
                     </select>
                   )}
 

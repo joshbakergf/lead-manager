@@ -192,25 +192,28 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
               {field.required && <span style={{ color: '#ef4444', marginLeft: '0.25rem' }}>*</span>}
             </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {(field.options || field.choices)?.map((option) => (
+              {(field.options || field.choices)?.map((option, index) => {
+                const optionId = typeof option === 'string' ? `option-${index}` : option.id;
+                const optionValue = typeof option === 'string' ? option : option.text;
+                return (
                 <label 
-                  key={option.id} 
+                  key={optionId} 
                   style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
                 >
                   <input
                     type={field.multiSelect ? 'checkbox' : 'radio'}
                     name={fieldId}
-                    value={option.id}
+                    value={optionValue}
                     checked={field.multiSelect ? 
-                      (Array.isArray(value) ? value.includes(option.id) : false) :
-                      value === option.id
+                      (Array.isArray(value) ? value.includes(optionValue) : false) :
+                      value === optionValue
                     }
                     onChange={(e) => {
                       if (field.multiSelect) {
                         const currentValues = Array.isArray(value) ? value : [];
                         const newValues = e.target.checked
-                          ? [...currentValues, option.id]
-                          : currentValues.filter(v => v !== option.id);
+                          ? [...currentValues, optionValue]
+                          : currentValues.filter(v => v !== optionValue);
                         handleInputChange(fieldId, newValues);
                       } else {
                         handleInputChange(fieldId, e.target.value);
@@ -222,9 +225,9 @@ export const FormPreview: React.FC<FormPreviewProps> = ({
                       accentColor: '#4285f4'
                     }}
                   />
-                  <span style={{ color: '#e2e8f0' }}>{option.text || option.label}</span>
-                </label>
-              ))}
+                  <span style={{ color: '#e2e8f0' }}>{typeof option === 'string' ? option : (option.text || option.label)}</span>
+                </label>)
+              })}
             </div>
           </div>
         );

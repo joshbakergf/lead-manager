@@ -288,10 +288,13 @@ const SortableFieldItem = React.memo<{
                   <span>{optionIndex + 1}</span>
                   <input
                     type="text"
-                    value={option}
+                    value={typeof option === 'string' ? option : option.text}
                     onChange={(e) => {
                       const newOptions = [...(field.options || [])];
-                      newOptions[optionIndex] = e.target.value;
+                      newOptions[optionIndex] = {
+                        id: typeof option === 'string' ? `option-${Date.now()}-${optionIndex}` : option.id,
+                        text: e.target.value
+                      };
                       onUpdateField(selectedPageId, field.id, { options: newOptions });
                     }}
                     placeholder={`Option ${optionIndex + 1}`}
@@ -310,7 +313,10 @@ const SortableFieldItem = React.memo<{
             <button
               className="add-option-btn"
               onClick={() => {
-                const newOptions = [...(field.options || []), ''];
+                const newOptions = [...(field.options || []), {
+                  id: `option-${Date.now()}-${(field.options || []).length}`,
+                  text: ''
+                }];
                 onUpdateField(selectedPageId, field.id, { options: newOptions });
               }}
             >

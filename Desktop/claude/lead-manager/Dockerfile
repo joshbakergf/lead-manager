@@ -1,6 +1,10 @@
 # Build stage  
 FROM node:20-alpine as builder
 
+# Add a cache-busting argument
+ARG CACHE_BUST=1
+ENV CACHE_BUST=$CACHE_BUST
+
 WORKDIR /app
 
 # Copy package files

@@ -37,6 +37,7 @@ export interface FormField {
   placeholder?: string;
   required?: boolean;
   choices?: Choice[];
+  options?: Choice[]; // Alternative to choices for dropdown/multiple-choice fields
   multiSelect?: boolean;
   minRating?: number;
   maxRating?: number;

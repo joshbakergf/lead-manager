@@ -2,6 +2,8 @@
 
 A modern, React-based lead qualification and script management system designed for door-to-door sales teams. Built with TypeScript, React, and Vite.
 
+**Latest Update**: Fixed multiple choice and dropdown options display - August 2, 2025
+
 ## Features
 
 ### 🎯 Script Builder
