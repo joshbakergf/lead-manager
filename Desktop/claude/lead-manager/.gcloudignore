@@ -1,0 +1,18 @@
+# Ignore backend directory to prevent confusion
+backend/
+
+# Ignore development files
+node_modules/
+.git/
+.gitignore
+*.log
+.env
+.env.local
+
+# Ignore build artifacts that shouldn't be uploaded
+dist/
+build/
+
+# Ignore documentation and non-essential files
+*.md
+Images/

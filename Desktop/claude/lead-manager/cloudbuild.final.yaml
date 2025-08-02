@@ -1,0 +1,36 @@
+steps:
+  # Build the Docker image with fixed nginx
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'Dockerfile.nginx-fixed',
+      '-t', 'gcr.io/$PROJECT_ID/lead-manager:final',
+      '.'
+    ]
+
+  # Push the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/lead-manager:final']
+
+  # Deploy to Cloud Run with extended timeout
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'lead-manager',
+      '--image', 'gcr.io/$PROJECT_ID/lead-manager:final',
+      '--region', 'us-central1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--port', '8080',
+      '--memory', '512Mi',
+      '--cpu', '1',
+      '--max-instances', '100',
+      '--min-instances', '0',
+      '--timeout', '300'
+    ]
+
+# Store images
+images:
+  - 'gcr.io/$PROJECT_ID/lead-manager:final'
+
+timeout: 1200s

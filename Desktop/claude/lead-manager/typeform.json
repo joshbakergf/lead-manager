@@ -1,0 +1,466 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c100000\c100000\c100000;\cssrgb\c0\c0\c0;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf0 \cb2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 \{\
+  "event_id": "01K147FTNKYB5EG54HDSVGG697",\
+  "event_type": "form_response",\
+  "form_response": \{\
+    "form_id": "nV3KH7g9",\
+    "token": "heeghtn9hk5uxfqkfqheex4jdax07aa8",\
+    "landed_at": "2025-07-26T20:31:26Z",\
+    "submitted_at": "2025-07-26T20:41:15Z",\
+    "hidden": \{\
+      "email": ""\
+    \},\
+    "definition": \{\
+      "id": "nV3KH7g9",\
+      "title": "Integrated Sales Script (Working Copy)",\
+      "fields": [\
+        \{\
+          "id": "s24gJ1hrYYpo",\
+          "ref": "ae4032fff3fdb3a7",\
+          "type": "short_text",\
+          "title": "Thank you for Calling Go-Forth Home Services and Lake Norman Home Services. This is (Your Name). How can i help you? *Do you have any other problems with pest throughout the year like (Mosquitos,Fleas or Fire Ants?(list issue below)*",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "hA0zWw2fgpam",\
+          "ref": "b7890556-6533-4615-9319-159437c4ef31",\
+          "type": "short_text",\
+          "title": "First name",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "se30ct7I2A05",\
+          "ref": "fee4cc74-64f3-4ff3-8b1c-33638e6186e2",\
+          "type": "short_text",\
+          "title": "Last name",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "hGWzkdKlX50W",\
+          "ref": "3b77120f81f0ef83",\
+          "type": "phone_number",\
+          "title": "In case we get disconnected, what is a good contact number that I can reach you back on? ",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "iKXHteeskvvQ",\
+          "ref": "1f839eb3-cad7-460f-84cc-b16713d0e509",\
+          "type": "short_text",\
+          "title": "Address",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "7LOJy03pCudv",\
+          "ref": "4428e1d9-bba6-4148-ab87-107d78358581",\
+          "type": "short_text",\
+          "title": "City/Town",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "4rNkJauL3v0j",\
+          "ref": "3bf27195-35df-4edd-bf56-1be08fe61da1",\
+          "type": "short_text",\
+          "title": "State/Region/Province",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "F11l2WlmXtns",\
+          "ref": "a25fb8d1-3468-4d12-9a1a-ceb6db23f352",\
+          "type": "short_text",\
+          "title": "Zip/Post Code",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "YbNacldkWshL",\
+          "ref": "698beee6389f78c7",\
+          "type": "short_text",\
+          "title": "I am going to place you on a brief hold while I gather pricing and package recommendations.\\n (IF HVAC/Plumbing/Electrical Move to next page)\\n\\n (skip IF pretreat/WDIR/BB/Commercial) \\n\\n(CHECK BEDBUG MAP BELOW BEFORE MOVING FORWARD)\\n[https://www.google.com/maps/d/u/0/viewer?mid=1XDUjS97GxQHV4AcM7LzpGB9BjqTyqhs&ll=35.33031230391432%2C-80.4723956827552&z=7](https://www.google.com/maps/d/u/0/viewer?mid=1XDUjS97GxQHV4AcM7LzpGB9BjqTyqhs&ll=35.33031230391432%2C-80.4723956827552&z=7))\\n\\n_*(If it's in the area we dont service please fill out link below)*_\\n_*https://docs.google.com/forms/d/e/1FAIpQLScMkRDgeEhB\\\\_hmHkN6Eicr8pcjzJO8YefHT7XothGCOGiyUHg/viewform*_\\n \\n([www.zillow.com](http://www.zillow.com) / [www.findlotsize.com](http://www.findlotsize.com)) - (enter square footage & lot size below) - Be sure to obtain pricing for EACH service, just in case all 3 are needed. \\n \\n(Map Link for Coverage area for Hvac/Pest below) [https://www.google.com/maps/d/u/0/viewer?mid=1RA9z6rDOydw2v0oRLPegEPuOLqjKulI&ll=36.105028955506334%2C-78.94236495813591&z=5](https://www.google.com/maps/d/u/0/viewer?mid=1RA9z6rDOydw2v0oRLPegEPuOLqjKulI&ll=36.105028955506334%2C-78.94236495813591&z=5)",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "MltgLinlTaUH",\
+          "ref": "ddcee023-b3b9-4c8e-956e-ae05d61f520b",\
+          "type": "multiple_choice",\
+          "title": "Select appropriate option.",\
+          "properties": \{\},\
+          "choices": [\
+            \{\
+              "id": "ppPogyBIUxzQ",\
+              "ref": "141f9343-33b0-443f-a70e-3ac3a03cd531",\
+              "label": "(DON'T START HERE)Basic Service"\
+            \},\
+            \{\
+              "id": "q06UZUlKtrUN",\
+              "ref": "d206c580-1e5d-469b-854d-a058e4cae63a",\
+              "label": "My Elite (Always Start Here Unless Yard Pest Issue)"\
+            \},\
+            \{\
+              "id": "62aFo7mXXYC5",\
+              "ref": "70381c60-f72a-4441-bc68-635efc17263b",\
+              "label": "My Elite Plus ( Start Here for yard pest problems)"\
+            \},\
+            \{\
+              "id": "ClWCelK0SlsG",\
+              "ref": "61524571-01eb-4cea-bd9d-ba7ec9ba6424",\
+              "label": "Monthly Service"\
+            \},\
+            \{\
+              "id": "mfUb6kHpMGZp",\
+              "ref": "36ea5995-561b-49d9-bb87-2a7bb1315201",\
+              "label": "General Pest/No issues"\
+            \},\
+            \{\
+              "id": "KNcsVFQYagID",\
+              "ref": "0ecac5bd-957e-4be4-9d92-8af82bad7c61",\
+              "label": "Termite Estimate/Wdir"\
+            \},\
+            \{\
+              "id": "JrwrMTx0swvi",\
+              "ref": "2c172166-c321-48c6-94d2-1bb46b9f837f",\
+              "label": "Pretreat"\
+            \},\
+            \{\
+              "id": "R3knHLgbviTm",\
+              "ref": "5bc210d4-ee00-453d-a718-a5d55bfc7d98",\
+              "label": "PCE / TE / Commercial PCE / BBI / One Time Treatment"\
+            \},\
+            \{\
+              "id": "6SCDD7Bu9APD",\
+              "ref": "81cb1712-9407-4ccb-ac11-37f0ed440696",\
+              "label": "Bedbug"\
+            \},\
+            \{\
+              "id": "wwiXWUGQ0Njk",\
+              "ref": "252e27dc-54ee-41b7-b931-939e8e9738db",\
+              "label": "Heating Issue"\
+            \},\
+            \{\
+              "id": "uBXzxY09r9F4",\
+              "ref": "cc8bb79a-c185-4cce-95b1-fb9bf9681b45",\
+              "label": "Cooling Issue"\
+            \},\
+            \{\
+              "id": "cpg3Vep7GYsi",\
+              "ref": "a5285c13-cff4-45f5-8583-ac5d95f5b075",\
+              "label": "Plumbing Issue"\
+            \},\
+            \{\
+              "id": "hONlbYwnFVtN",\
+              "ref": "738d234d-24e8-44b0-914f-1e391f19811a",\
+              "label": "Electrical"\
+            \},\
+            \{\
+              "id": "iRi0ZIFzHJSA",\
+              "ref": "d9c3e2f5-f714-4f7d-a75f-0e03f8c16b68",\
+              "label": "HVAC Real Estate Inspection"\
+            \},\
+            \{\
+              "id": "tfoh9cpUogCU",\
+              "ref": "97b889e3-f1fd-481c-a97f-6a28f3cf6165",\
+              "label": "HVAC NEW SYSTEM Quote"\
+            \}\
+          ]\
+        \},\
+        \{\
+          "id": "lvwcRJpAJB2I",\
+          "ref": "52e23e67997e7968",\
+          "type": "yes_no",\
+          "title": "Thank you for holding! My recommendation to take care of the [pest] would be The My Elite, this is our most popular service option. With this plan we service your home every other month for the pest you mentioned. This plan also covers outdoor living areas, such as playground areas and detached outbuildings. This package covers all your general pests, rodents and flying/stinging insects, and even fleas inside your home. This plan also has free additional services if you need us in between your regular scheduled visits. If you keep it for the first year, next year you will have free bed bug coverage. No one else in the area offers this! The initial startup cost would be $249 and then 'X' monthly moving forward. Lets go ahead and get this set up to have someone to come out today or can have someone out tomorrow between 8-12 or 1-4 to come out and start up your plan.",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "6tjuiL07Xk06",\
+          "ref": "3231fcba7ee68992",\
+          "type": "email",\
+          "title": "Thank you for providing that information could you please provide me your email address?",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "fPjSmHpzASpd",\
+          "ref": "3c04396a-31cb-4fec-9dfa-cca9cf3b8cff",\
+          "type": "short_text",\
+          "title": "Credit Card Number",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "MDufKMcFlcCz",\
+          "ref": "47190d4e-583d-4bb1-b831-95bc595b9a42",\
+          "type": "short_text",\
+          "title": "Expiration date",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "Sw4A4YgkJynz",\
+          "ref": "920d333c-322a-436a-bb66-bf106fadfb18",\
+          "type": "short_text",\
+          "title": "Security code",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "5gszYeTF13xT",\
+          "ref": "9925ba73-5da0-4ae0-95cc-5eb345ceb405",\
+          "type": "short_text",\
+          "title": "We will run initial payment today of set amount.",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "VH98NLfLWdoH",\
+          "ref": "a196f1af-5925-42d3-bc4e-a46b2ebc1d1e",\
+          "type": "short_text",\
+          "title": "Is billing address the same?",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "E5LDHjzOEgAj",\
+          "ref": "873f86ee-4e45-4ce1-99c0-ec93eaa82f75",\
+          "type": "short_text",\
+          "title": "Price of service and Date/time set up",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "44Hl4qD9w3YF",\
+          "ref": "5b39e05a-1ad8-4fd3-9b6e-26033b189ade",\
+          "type": "dropdown",\
+          "title": "Who sold it?",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "v4Wu6H5eBKsn",\
+          "ref": "68e13ef3-f49a-4cfd-9982-4592bd0ac81a",\
+          "type": "short_text",\
+          "title": "Do you have any additional questions or concerns for me today? (PAUSE - answer any questions). Put the quote information price and your name IF TE OR PCE PUT TIME AND date. *! *\\n\\n*(IF you quote HVAC Already don't Read Below) *\\n\\n(READ BELOW IF YOU QUOTE OR SOLD PEST SERVICE)\\n*Alright, [Customer Name], we\'92ve got everything squared away for your pest control service! Before I let you go, I wanted to share something valuable that many of our customers love*",\
+          "properties": \{\}\
+        \},\
+        \{\
+          "id": "h4Nxt12zH16p",\
+          "ref": "99d4ce7b-6be0-4529-9187-123291fc72f6",\
+          "type": "short_text",\
+          "title": "Since you already trust us to protect your home from pests, we also offer a comprehensive HVAC maintenance plan for just $10 a month. This plan keeps your heating and cooling system running efficiently and can lower your energy bills by up to 20% while preventing expensive breakdowns.\\"\\n\\nKey Benefits: \\"With this plan, you\'92ll get:\\n-Two free tune-ups per year\'97one for heating, one for AC\\n-Priority scheduling within 48 hours\\n-A 10% discount on HVAC, electrical, and plumbing repairs\\n-A free diagnostic visit (normally $149)\\n\\"It\'92s an easy and affordable way to keep your home comfortable year-round!\\"\\n\\"Let\'92s go ahead and add this to your account today. Would you like to schedule your first maintenance visit for tomorrow between 8-12 or 1-4?\\"",\
+          "properties": \{\}\
+        \}\
+      ],\
+      "endings": [\
+        \{\
+          "id": "VV21nhvp1guU",\
+          "ref": "7e1ae2a0-087a-4aee-83b6-5e513fb3424a",\
+          "title": "",\
+          "type": "thankyou_screen",\
+          "properties": \{\
+            "button_text": "again",\
+            "show_button": true,\
+            "share_icons": true,\
+            "button_mode": "reload"\
+          \}\
+        \}\
+      ],\
+      "settings": \{\
+        "partial_responses_to_all_integrations": false\
+      \}\
+    \},\
+    "answers": [\
+      \{\
+        "type": "text",\
+        "text": "Ants in the kitchen area.",\
+        "field": \{\
+          "id": "s24gJ1hrYYpo",\
+          "type": "short_text",\
+          "ref": "ae4032fff3fdb3a7"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "Brianna",\
+        "field": \{\
+          "id": "hA0zWw2fgpam",\
+          "type": "short_text",\
+          "ref": "b7890556-6533-4615-9319-159437c4ef31"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "Freeman",\
+        "field": \{\
+          "id": "se30ct7I2A05",\
+          "type": "short_text",\
+          "ref": "fee4cc74-64f3-4ff3-8b1c-33638e6186e2"\
+        \}\
+      \},\
+      \{\
+        "type": "phone_number",\
+        "phone_number": "+17048604228",\
+        "field": \{\
+          "id": "hGWzkdKlX50W",\
+          "type": "phone_number",\
+          "ref": "3b77120f81f0ef83"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "1104 W 5th Ave",\
+        "field": \{\
+          "id": "iKXHteeskvvQ",\
+          "type": "short_text",\
+          "ref": "1f839eb3-cad7-460f-84cc-b16713d0e509"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "Gastonia",\
+        "field": \{\
+          "id": "7LOJy03pCudv",\
+          "type": "short_text",\
+          "ref": "4428e1d9-bba6-4148-ab87-107d78358581"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "NC",\
+        "field": \{\
+          "id": "4rNkJauL3v0j",\
+          "type": "short_text",\
+          "ref": "3bf27195-35df-4edd-bf56-1be08fe61da1"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "28052",\
+        "field": \{\
+          "id": "F11l2WlmXtns",\
+          "type": "short_text",\
+          "ref": "a25fb8d1-3468-4d12-9a1a-ceb6db23f352"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "884 sqft",\
+        "field": \{\
+          "id": "YbNacldkWshL",\
+          "type": "short_text",\
+          "ref": "698beee6389f78c7"\
+        \}\
+      \},\
+      \{\
+        "type": "choice",\
+        "choice": \{\
+          "id": "q06UZUlKtrUN",\
+          "label": "My Elite (Always Start Here Unless Yard Pest Issue)",\
+          "ref": "d206c580-1e5d-469b-854d-a058e4cae63a"\
+        \},\
+        "field": \{\
+          "id": "MltgLinlTaUH",\
+          "type": "multiple_choice",\
+          "ref": "ddcee023-b3b9-4c8e-956e-ae05d61f520b"\
+        \}\
+      \},\
+      \{\
+        "type": "boolean",\
+        "boolean": true,\
+        "field": \{\
+          "id": "lvwcRJpAJB2I",\
+          "type": "yes_no",\
+          "ref": "52e23e67997e7968"\
+        \}\
+      \},\
+      \{\
+        "type": "email",\
+        "email": "092612leilani@gmail.com",\
+        "field": \{\
+          "id": "6tjuiL07Xk06",\
+          "type": "email",\
+          "ref": "3231fcba7ee68992"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "4403931516095743",\
+        "field": \{\
+          "id": "fPjSmHpzASpd",\
+          "type": "short_text",\
+          "ref": "3c04396a-31cb-4fec-9dfa-cca9cf3b8cff"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "02/28",\
+        "field": \{\
+          "id": "MDufKMcFlcCz",\
+          "type": "short_text",\
+          "ref": "47190d4e-583d-4bb1-b831-95bc595b9a42"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "580",\
+        "field": \{\
+          "id": "Sw4A4YgkJynz",\
+          "type": "short_text",\
+          "ref": "920d333c-322a-436a-bb66-bf106fadfb18"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "Day of service please",\
+        "field": \{\
+          "id": "5gszYeTF13xT",\
+          "type": "short_text",\
+          "ref": "9925ba73-5da0-4ae0-95cc-5eb345ceb405"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "yes",\
+        "field": \{\
+          "id": "VH98NLfLWdoH",\
+          "type": "short_text",\
+          "ref": "a196f1af-5925-42d3-bc4e-a46b2ebc1d1e"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "$95/59 - appt 7/28 8-10am w/ call ahead",\
+        "field": \{\
+          "id": "E5LDHjzOEgAj",\
+          "type": "short_text",\
+          "ref": "873f86ee-4e45-4ce1-99c0-ec93eaa82f75"\
+        \}\
+      \},\
+      \{\
+        "type": "choice",\
+        "choice": \{\
+          "id": "1u2v6oQhyELb",\
+          "label": "Jessica Francis",\
+          "ref": "520efac9-2f31-400e-8246-21c6bfa81913"\
+        \},\
+        "field": \{\
+          "id": "44Hl4qD9w3YF",\
+          "type": "dropdown",\
+          "ref": "5b39e05a-1ad8-4fd3-9b6e-26033b189ade"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "Jessica F sold ME $95/59 - appt 7/28 8-10am w/ call ahead. Issues with ants in the kitchen area.Please collect a diff card at time of service for first payment! just put one on file to book it.",\
+        "field": \{\
+          "id": "v4Wu6H5eBKsn",\
+          "type": "short_text",\
+          "ref": "68e13ef3-f49a-4cfd-9982-4592bd0ac81a"\
+        \}\
+      \},\
+      \{\
+        "type": "text",\
+        "text": "Quoted w/ PC, She declined, stated she just her system cleaned and duct work taken care of.",\
+        "field": \{\
+          "id": "h4Nxt12zH16p",\
+          "type": "short_text",\
+          "ref": "99d4ce7b-6be0-4529-9187-123291fc72f6"\
+        \}\
+      \}\
+    ],}

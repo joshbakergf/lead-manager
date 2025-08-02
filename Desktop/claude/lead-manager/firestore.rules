@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is from go-forth.com
+    function isGoForthUser() {
+      return request.auth != null && 
+             request.auth.token.email.matches('.*@go-forth[.]com$');
+    }
+    
+    // Users collection - simplified permissions for initial setup
+    match /users/{userId} {
+      allow read: if isGoForthUser();
+      allow create: if isGoForthUser() && request.auth.uid == userId;
+      allow update: if isGoForthUser() && request.auth.uid == userId;
+      allow delete: if false; // No deletion for now
+    }
+    
+    // Roles collection - allow authenticated users to read
+    match /roles/{roleId} {
+      allow read: if isGoForthUser();
+      allow create: if isGoForthUser(); // Allow creation for initialization
+      allow update: if isGoForthUser();
+      allow delete: if false;
+    }
+    
+    // Scripts collection - simplified for now
+    match /scripts/{scriptId} {
+      allow read: if isGoForthUser();
+      allow create: if isGoForthUser();
+      allow update: if isGoForthUser();
+      allow delete: if isGoForthUser();
+    }
+    
+    // Leads collection - simplified
+    match /leads/{leadId} {
+      allow read: if isGoForthUser();
+      allow create: if isGoForthUser();
+      allow update: if isGoForthUser();
+      allow delete: if isGoForthUser();
+    }
+    
+    // Workflows collection
+    match /workflows/{workflowId} {
+      allow read: if isGoForthUser();
+      allow write: if isGoForthUser();
+    }
+    
+    // Webhooks collection
+    match /webhooks/{webhookId} {
+      allow read: if isGoForthUser();
+      allow write: if isGoForthUser();
+    }
+    
+    // Published scripts
+    match /publishedScripts/{scriptId} {
+      allow read: if isGoForthUser();
+      allow write: if isGoForthUser();
+    }
+  }
+}

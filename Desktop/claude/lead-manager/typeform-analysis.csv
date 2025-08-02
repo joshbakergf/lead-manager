@@ -1,0 +1,24 @@
+Page_Number,Page_Type,Page_Title,Field_Type,Field_Label,API_Name,Options,Notes
+1,welcome,Sales Call Introduction,,,,,Welcome screen for the integrated sales script
+2,form,Initial Problem Assessment,short-text,"How can I help you? (List any pest issues like mosquitos, fleas, fire ants)",initial_problem,,Opening question for sales agent
+3,form,Customer Information - Name,short-text,First Name,first_name,,
+3,form,Customer Information - Name,short-text,Last Name,last_name,,
+4,form,Contact Information,phone,Contact Number,phone_number,,"In case we get disconnected, what is a good contact number?"
+5,form,Address Information,short-text,Street Address,address,,
+5,form,Address Information,short-text,City/Town,city,,
+5,form,Address Information,short-text,State/Region,state,,
+5,form,Address Information,short-text,Zip/Postal Code,zip_code,,
+6,form,Property Details,short-text,Property Information,property_info,,"Square footage, lot size, and service area verification"
+7,form,Service Selection,multiple-choice,Select Service Type,service_type,"Basic Service|My Elite (Always Start Here)|My Elite Plus (Yard Pest)|Monthly Service|General Pest|Termite Estimate|Pretreat|PCE/TE/Commercial|Bedbug|Heating Issue|Cooling Issue|Plumbing Issue|Electrical|HVAC Inspection|HVAC New System",Main service selection with multiple options
+8,form,Service Presentation,yes-no,Accept Recommended Service,accept_service,,Sales pitch and customer response
+9,form,Email Collection,email,Email Address,email,,Customer email for follow-up
+10,form,Payment Information,short-text,Credit Card Number,credit_card,,Secure payment collection
+10,form,Payment Information,short-text,Expiration Date,card_expiry,,MM/YY format
+10,form,Payment Information,short-text,Security Code,card_cvv,,3-4 digit security code
+11,form,Payment Terms,short-text,Payment Timing,payment_timing,,When to charge the card
+12,form,Billing Verification,short-text,Billing Address Same,billing_same,,Confirm if billing address matches service address
+13,form,Appointment Scheduling,short-text,Service Details,service_details,,Price and appointment time/date
+14,form,Sales Representative,dropdown,Sales Rep,sales_rep,"Select Rep|Jessica Francis|Other Reps",Who handled the sale
+15,form,Additional Questions,short-text,Customer Questions,customer_questions,,Final questions and concerns before closing
+16,form,HVAC Upsell,short-text,HVAC Maintenance Offer,hvac_upsell,,Optional HVAC maintenance plan presentation
+17,ending,Call Completion,,,,,Thank you and next steps confirmation

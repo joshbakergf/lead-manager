@@ -1,0 +1,17 @@
+# Build stage
+FROM node:20-alpine as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Serve with static file server
+FROM busybox:1.35
+RUN adduser -D static
+USER static
+WORKDIR /home/static
+COPY --from=builder /app/dist .
+
+# Create a simple HTTP server
+CMD ["busybox", "httpd", "-f", "-v", "-p", "8080", "-h", "."]

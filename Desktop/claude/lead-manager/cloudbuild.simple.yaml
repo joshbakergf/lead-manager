@@ -1,0 +1,41 @@
+steps:
+  # Build the Docker image using simple Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'Dockerfile.simple',
+      '-t', 'gcr.io/$PROJECT_ID/lead-manager:simple',
+      '-t', 'gcr.io/$PROJECT_ID/lead-manager:latest',
+      '.'
+    ]
+
+  # Push the Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/lead-manager:simple']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/lead-manager:latest']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'lead-manager',
+      '--image', 'gcr.io/$PROJECT_ID/lead-manager:simple',
+      '--region', 'us-central1',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--port', '8080',
+      '--memory', '512Mi',
+      '--cpu', '1',
+      '--max-instances', '100',
+      '--min-instances', '0'
+    ]
+
+# Store images in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/lead-manager:simple'
+  - 'gcr.io/$PROJECT_ID/lead-manager:latest'
+
+# Set build timeout
+timeout: 1200s

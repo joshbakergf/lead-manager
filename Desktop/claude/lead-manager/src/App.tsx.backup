@@ -1,6 +1,4 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import ContentEditor from './components/ContentEditor';
-import Dashboard from './components/Dashboard';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -78,7 +76,6 @@ import {
   Shield,
   Loader,
   LayoutGrid,
-  BarChart3,
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -145,16 +142,8 @@ const SortableFieldItem = React.memo<{
   }, [selectedPageId, field.id, onUpdateField]);
 
   const handleFieldTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as FieldType;
-    const updates: Partial<FormField> = { type: newType };
-    
-    // Initialize options for dropdown and multiple-choice fields
-    if ((newType === 'dropdown' || newType === 'multiple-choice') && !field.options) {
-      updates.options = ['Option 1', 'Option 2', 'Option 3'];
-    }
-    
-    onUpdateField(selectedPageId, field.id, updates);
-  }, [selectedPageId, field.id, field.options, onUpdateField]);
+    onUpdateField(selectedPageId, field.id, { type: e.target.value as FieldType });
+  }, [selectedPageId, field.id, onUpdateField]);
 
   const handleDeleteField = useCallback(() => {
     onDeleteField(selectedPageId, field.id);
@@ -235,7 +224,14 @@ const SortableFieldItem = React.memo<{
               <option value="cvv">🔒 CVV</option>
               <option value="expiry-date">📅 Expiry Date (MMYY)</option>
               <option value="card-type">💰 Card Type</option>
-              <option value="content-block">📄 Content Block</option>
+              <optgroup label="Custom Elements">
+                <option value="image">🖼️ Image</option>
+                <option value="iframe">🌐 Embed (iframe)</option>
+                <option value="table">📊 Table</option>
+                <option value="rich-text">📝 Rich Text</option>
+                <option value="video">🎬 Video</option>
+                <option value="divider">➖ Divider</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -263,60 +259,205 @@ const SortableFieldItem = React.memo<{
           </div>
         </div>
 
-        {/* Content Block Configuration */}
-        {field.type === "content-block" && (
+        {/* Custom Element Configurations */}
+        {field.type === 'image' && (
           <div className="field-config-section">
-            <h4>Content Block</h4>
-            <div className="help-text" style={{ marginBottom: "10px", fontSize: "14px", color: "#666" }}>
-              <p>Create rich content with formatted text, images, tables, lists, and more using the WYSIWYG editor below.</p>
+            <h4>Image Configuration</h4>
+            <div className="field-config-row">
+              <div className="field-config-item">
+                <label>Image URL</label>
+                <input
+                  type="url"
+                  value={field.imageUrl || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { imageUrl: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div className="field-config-item">
+                <label>Alt Text</label>
+                <input
+                  type="text"
+                  value={field.imageAlt || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { imageAlt: e.target.value })}
+                  placeholder="Image description"
+                />
+              </div>
             </div>
-            <ContentEditor
-              value={field.contentValue || ""}
-              onChange={(value) => onUpdateField(selectedPageId, field.id, { contentValue: value })}
-              placeholder="Start typing to create rich content..."
-            />
+            <div className="field-config-row">
+              <div className="field-config-item">
+                <label>Width (px)</label>
+                <input
+                  type="number"
+                  value={field.imageWidth || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { imageWidth: Number(e.target.value) })}
+                  placeholder="Auto"
+                />
+              </div>
+              <div className="field-config-item">
+                <label>Height (px)</label>
+                <input
+                  type="number"
+                  value={field.imageHeight || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { imageHeight: Number(e.target.value) })}
+                  placeholder="Auto"
+                />
+              </div>
+            </div>
           </div>
         )}
-        
-        {/* Options for dropdown and multiple choice fields */}
-        {(field.type === 'dropdown' || field.type === 'multiple-choice') && (
+
+        {field.type === 'iframe' && (
           <div className="field-config-section">
-            <h4>Options</h4>
-            <div className="options-list">
-              {field.options?.map((option, optionIndex) => (
-                <div key={optionIndex} className="option-row">
-                  <span>{optionIndex + 1}</span>
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) => {
-                      const newOptions = [...(field.options || [])];
-                      newOptions[optionIndex] = e.target.value;
-                      onUpdateField(selectedPageId, field.id, { options: newOptions });
-                    }}
-                    placeholder={`Option ${optionIndex + 1}`}
-                  />
-                  <button
-                    onClick={() => {
-                      const newOptions = field.options?.filter((_, i) => i !== optionIndex) || [];
-                      onUpdateField(selectedPageId, field.id, { options: newOptions });
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
+            <h4>Embed Configuration</h4>
+            <div className="field-config-row">
+              <div className="field-config-item full-width">
+                <label>Embed URL</label>
+                <input
+                  type="url"
+                  value={field.iframeUrl || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { iframeUrl: e.target.value })}
+                  placeholder="https://www.youtube.com/embed/..."
+                />
+              </div>
             </div>
-            <button
-              className="add-option-btn"
-              onClick={() => {
-                const newOptions = [...(field.options || []), ''];
-                onUpdateField(selectedPageId, field.id, { options: newOptions });
-              }}
-            >
-              <Plus size={16} />
-              Add Option
-            </button>
+            <div className="field-config-row">
+              <div className="field-config-item">
+                <label>Width (px)</label>
+                <input
+                  type="number"
+                  value={field.iframeWidth || 560}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { iframeWidth: Number(e.target.value) })}
+                />
+              </div>
+              <div className="field-config-item">
+                <label>Height (px)</label>
+                <input
+                  type="number"
+                  value={field.iframeHeight || 315}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { iframeHeight: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {field.type === 'rich-text' && (
+          <div className="field-config-section">
+            <h4>Rich Text Configuration</h4>
+            <div className="field-config-row">
+              <div className="field-config-item full-width">
+                <label>HTML Content</label>
+                <textarea
+                  value={field.richTextContent || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { richTextContent: e.target.value })}
+                  placeholder="<p>Enter your HTML content here...</p>"
+                  rows={6}
+                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                />
+                <small>You can use HTML tags and merge variables like {`{{firstName}}`}</small>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {field.type === 'video' && (
+          <div className="field-config-section">
+            <h4>Video Configuration</h4>
+            <div className="field-config-row">
+              <div className="field-config-item full-width">
+                <label>Video URL</label>
+                <input
+                  type="url"
+                  value={field.videoUrl || ''}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { videoUrl: e.target.value })}
+                  placeholder="https://www.youtube.com/watch?v=... or direct video URL"
+                />
+              </div>
+            </div>
+            <div className="field-config-row">
+              <div className="field-config-item">
+                <label>Width (px)</label>
+                <input
+                  type="number"
+                  value={field.videoWidth || 560}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { videoWidth: Number(e.target.value) })}
+                />
+              </div>
+              <div className="field-config-item">
+                <label>Height (px)</label>
+                <input
+                  type="number"
+                  value={field.videoHeight || 315}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { videoHeight: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {field.type === 'table' && (
+          <div className="field-config-section">
+            <h4>Table Configuration</h4>
+            <div className="field-config-row">
+              <div className="field-config-item full-width">
+                <label>Table Headers (comma-separated)</label>
+                <input
+                  type="text"
+                  value={field.tableHeaders?.join(', ') || ''}
+                  onChange={(e) => {
+                    const headers = e.target.value.split(',').map(h => h.trim()).filter(h => h);
+                    onUpdateField(selectedPageId, field.id, { tableHeaders: headers });
+                  }}
+                  placeholder="Name, Email, Phone, Company..."
+                />
+              </div>
+            </div>
+            <div className="field-config-row">
+              <div className="field-config-item full-width">
+                <label>Table Data (CSV format - one row per line)</label>
+                <textarea
+                  value={field.tableData?.map(row => row.join(', ')).join('\n') || ''}
+                  onChange={(e) => {
+                    const rows = e.target.value.split('\n').map(line => 
+                      line.split(',').map(cell => cell.trim()).filter(cell => cell)
+                    ).filter(row => row.length > 0);
+                    onUpdateField(selectedPageId, field.id, { tableData: rows });
+                  }}
+                  placeholder="John Doe, john@example.com, 555-1234, Acme Corp&#10;Jane Smith, jane@example.com, 555-5678, Tech Inc"
+                  rows={4}
+                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                />
+                <small>Each line is a row, separate columns with commas. You can use merge variables.</small>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {field.type === 'divider' && (
+          <div className="field-config-section">
+            <h4>Divider Configuration</h4>
+            <div className="field-config-row">
+              <div className="field-config-item">
+                <label>Style</label>
+                <select
+                  value={field.dividerStyle || 'solid'}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { dividerStyle: e.target.value as 'solid' | 'dashed' | 'dotted' | 'double' })}
+                >
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                  <option value="double">Double</option>
+                </select>
+              </div>
+              <div className="field-config-item">
+                <label>Color</label>
+                <input
+                  type="color"
+                  value={field.dividerColor || '#cccccc'}
+                  onChange={(e) => onUpdateField(selectedPageId, field.id, { dividerColor: e.target.value })}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -508,7 +649,7 @@ function App() {
   }
 
   const { isAuthenticated, isLoading, user, logout, hasModuleAccess, hasPermission } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'content' | 'workflow' | 'connect' | 'share' | 'data' | 'users' | 'roles'>('dashboard');
+  const [activeView, setActiveView] = useState<'content' | 'workflow' | 'connect' | 'share' | 'data' | 'users' | 'roles'>('content');
 
   // Load webhooks from Firestore on app start
   React.useEffect(() => {
@@ -537,25 +678,19 @@ function App() {
   const getValidActiveView = () => {
     if (!isAuthenticated || !user) return activeView;
     
-    // Dashboard is always accessible to all authenticated users
-    if (activeView === 'dashboard') {
-      return activeView;
-    }
-    
     const currentModuleId = activeView === 'data' ? 'leads' : activeView;
     if (hasModuleAccess(currentModuleId)) {
       return activeView;
     }
     
-    // Find first available module, with dashboard as the first option
-    const availableModules = ['dashboard', 'share', 'data', 'content', 'workflow', 'connect', 'users', 'roles'] as const;
+    // Find first available module
+    const availableModules = ['share', 'data', 'content', 'workflow', 'connect', 'users', 'roles'] as const;
     const firstAvailable = availableModules.find(module => {
-      if (module === 'dashboard') return true; // Dashboard is always available
       const moduleId = module === 'data' ? 'leads' : module;
       return hasModuleAccess(moduleId);
     });
     
-    return firstAvailable || 'dashboard'; // Fallback to dashboard
+    return firstAvailable || 'share'; // Fallback to share
   };
 
   const validActiveView = getValidActiveView();
@@ -2056,6 +2191,7 @@ function App() {
             deletePage(page.id);
           }}
           onMouseDown={(e) => e.stopPropagation()}
+          title={`Delete ${page.name}`}
         >
           <Trash2 size={14} />
         </button>
@@ -2514,9 +2650,6 @@ function App() {
 
   const renderSidebar = () => {
     switch (validActiveView) {
-      case 'dashboard':
-        return null; // Dashboard doesn't need a sidebar
-        
       case 'content':
         return (
           <div className="sidebar">
@@ -2679,21 +2812,21 @@ function App() {
                     </div>
                   ) : selectedPage.type === 'form' && selectedPage.fields ? (
                     <div className="logic-rules">
-                      {/* Show choice-based routing for form fields with options */}
+                      {/* Show choice-based routing for form fields with choices */}
                       {selectedPage.fields
-                        .filter(field => (field.options && field.options.length > 0) || (field.choices && field.choices.length > 0))
+                        .filter(field => field.choices && field.choices.length > 0)
                         .map(field => (
                           <div key={field.id} className="field-logic-group">
                             <h5 className="field-logic-title">{field.label}</h5>
-                            {(field.options || field.choices)?.map(option => {
-                              const ruleKey = `${selectedPage.id}-${field.id}-${option.id}`;
+                            {field.choices?.map(choice => {
+                              const ruleKey = `${selectedPage.id}-${field.id}-${choice.id}`;
                               const currentTarget = logicRules[ruleKey] || 'end';
                               
                               return (
-                                <div key={option.id} className="logic-rule">
+                                <div key={choice.id} className="logic-rule">
                                   <div className="rule-condition">
                                     <span className="condition-label">If customer selects:</span>
-                                    <span className="condition-value">"{option.text || option.label}"</span>
+                                    <span className="condition-value">"{choice.text}"</span>
                                   </div>
                                   <div className="rule-action">
                                     <span className="action-label">Go to:</span>
@@ -2717,7 +2850,7 @@ function App() {
                         ))}
                       
                       {/* Default flow for pages without conditional routing */}
-                      {selectedPage.fields.filter(field => (field.options && field.options.length > 0) || (field.choices && field.choices.length > 0)).length === 0 && (
+                      {selectedPage.fields.filter(field => field.choices && field.choices.length > 0).length === 0 && (
                         <div className="logic-rule">
                           <div className="rule-condition">
                             <span className="condition-label">Page flow:</span>
@@ -2934,14 +3067,6 @@ function App() {
   };
 
   const renderMainContent = () => {
-    if (activeView === 'dashboard') {
-      return (
-        <div className="main-content dashboard-wrapper">
-          <Dashboard />
-        </div>
-      );
-    }
-    
     if (activeView === 'workflow') {
       return (
         <ReactFlowProvider>
@@ -3628,7 +3753,7 @@ function App() {
   }
 
   return (
-    <div className={`app ${activeView === 'dashboard' ? 'dashboard-view' : ''}`}>
+    <div className="app">
       {/* Publish Dialog */}
       {showPublishDialog && <PublishDialog />}
       
@@ -3694,7 +3819,6 @@ function App() {
       {/* Navigation */}
       <nav className="nav">
         {[
-          { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
           ...(hasModuleAccess('content') ? [{ id: 'content', icon: Type, label: 'Content' }] : []),
           ...(hasModuleAccess('workflow') ? [{ id: 'workflow', icon: Zap, label: 'Workflow' }] : []),
           ...(hasModuleAccess('connect') ? [{ id: 'connect', icon: Webhook, label: 'Connect' }] : []),

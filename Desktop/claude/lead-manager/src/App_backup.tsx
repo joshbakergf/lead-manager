@@ -1,6 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import ContentEditor from './components/ContentEditor';
-import Dashboard from './components/Dashboard';
+import React, { useState, useCallback } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -48,15 +46,13 @@ import { generateFieldId, generateApiName, ensureUniqueApiName } from './utils/f
 import logoImage from './assets/logo.png';
 import { useAuth } from './contexts/AuthContext';
 import { useAppData } from './hooks/useAppData';
-import { webhookService, scriptService, publishedScriptService } from './lib/firestore';
+import { webhookService } from './lib/firestore';
 import { Login } from './components/Login';
 import { UsersView } from './components/UsersView';
 import { RolesView } from './components/RolesView';
 import { PublicPreview } from './components/PublicPreview';
 import { LiveScript } from './components/LiveScript';
 import { EmbeddedPreview } from './components/EmbeddedPreview';
-import { PaymentField } from './components/PaymentField';
-// Dynamic import for Zillow service to avoid initialization issues
 
 import {
   Type,
@@ -78,7 +74,6 @@ import {
   Shield,
   Loader,
   LayoutGrid,
-  BarChart3,
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -100,370 +95,322 @@ const initialPages: FormPage[] = [
   }
 ];
 
-// Sortable Field Item Component - moved outside App to prevent recreations
-const SortableFieldItem = React.memo<{
-  field: FormField;
-  fieldIndex: number;
-  selectedPageId: string;
-  formPages: FormPage[];
-  onUpdateField: (pageId: string, fieldId: string, updates: Partial<FormField>) => void;
-  onDeleteField: (pageId: string, fieldId: string) => void;
-  generateApiName: (label: string) => string;
-  ensureUniqueApiName: (apiName: string, existingFields: FormField[], excludeFieldId?: string) => string;
-  zillowConnections: any[];
-}>(({ field, fieldIndex, selectedPageId, formPages, onUpdateField, onDeleteField, generateApiName, ensureUniqueApiName, zillowConnections }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: field.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  // Stable event handlers
-  const handleLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdateField(selectedPageId, field.id, { label: e.target.value });
-  }, [selectedPageId, field.id, onUpdateField]);
-
-  const handleApiNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdateField(selectedPageId, field.id, { apiName: e.target.value });
-  }, [selectedPageId, field.id, onUpdateField]);
-
-  const handlePlaceholderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdateField(selectedPageId, field.id, { placeholder: e.target.value });
-  }, [selectedPageId, field.id, onUpdateField]);
-
-  const handleRequiredChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdateField(selectedPageId, field.id, { required: e.target.checked });
-  }, [selectedPageId, field.id, onUpdateField]);
-
-  const handleFieldTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as FieldType;
-    const updates: Partial<FormField> = { type: newType };
-    
-    // Initialize options for dropdown and multiple-choice fields
-    if ((newType === 'dropdown' || newType === 'multiple-choice') && !field.options) {
-      updates.options = ['Option 1', 'Option 2', 'Option 3'];
-    }
-    
-    onUpdateField(selectedPageId, field.id, updates);
-  }, [selectedPageId, field.id, field.options, onUpdateField]);
-
-  const handleDeleteField = useCallback(() => {
-    onDeleteField(selectedPageId, field.id);
-  }, [selectedPageId, field.id, onDeleteField]);
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`field-editor ${isDragging ? 'dragging' : ''}`}
-    >
-      <div className="field-header">
-        <div 
-          className="field-drag-handle"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical size={16} />
-        </div>
-        <span className="field-number">{fieldIndex + 1}</span>
-        <input
-          type="text"
-          className="field-label-input"
-          value={field.label}
-          key={`field-label-${field.id}`}
-          onChange={handleLabelChange}
-          placeholder="Field label..."
-        />
-        <button
-          className="delete-field-btn"
-          onClick={handleDeleteField}
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
-
-      <div className="field-config">
-        <div className="field-meta-section">
-          <div className="field-id-display">
-            <label>Field ID</label>
-            <code className="field-id-code">{field.id}</code>
-          </div>
-        </div>
-
-        <div className="field-config-row">
-          <div className="field-config-item">
-            <label>API Name</label>
-            <input
-              type="text"
-              value={field.apiName}
-              key={`api-name-${field.id}`}
-              onChange={handleApiNameChange}
-              className="api-name-input"
-              placeholder="field_name"
-            />
-          </div>
-          <div className="field-config-item">
-            <label>Field Type</label>
-            <select
-              value={field.type}
-              onChange={handleFieldTypeChange}
-            >
-              <option value="short-text">Short Text</option>
-              <option value="long-text">Long Text</option>
-              <option value="email">Email</option>
-              <option value="phone">Phone</option>
-              <option value="url">URL</option>
-              <option value="number">Number</option>
-              <option value="date">Date</option>
-              <option value="time">Time</option>
-              <option value="multiple-choice">Multiple Choice</option>
-              <option value="checkbox">Checkbox</option>
-              <option value="dropdown">Dropdown</option>
-              <option value="rating">Rating</option>
-              <option value="file-upload">File Upload</option>
-              <option value="enhanced-address">Enhanced Address</option>
-              <option value="credit-card">💳 Credit Card Number</option>
-              <option value="cvv">🔒 CVV</option>
-              <option value="expiry-date">📅 Expiry Date (MMYY)</option>
-              <option value="card-type">💰 Card Type</option>
-              <option value="content-block">📄 Content Block</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="field-config-row">
-          <div className="field-config-item">
-            <label>Placeholder Text</label>
-            <input
-              type="text"
-              value={field.placeholder || ''}
-              key={`placeholder-${field.id}`}
-              onChange={handlePlaceholderChange}
-              placeholder="Enter placeholder text..."
-            />
-          </div>
-          <div className="field-config-item">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={field.required || false}
-                onChange={handleRequiredChange}
-              />
-              Required field
-            </label>
-          </div>
-        </div>
-
-        {/* Content Block Configuration */}
-        {field.type === "content-block" && (
-          <div className="field-config-section">
-            <h4>Content Block</h4>
-            <div className="help-text" style={{ marginBottom: "10px", fontSize: "14px", color: "#666" }}>
-              <p>Create rich content with formatted text, images, tables, lists, and more using the WYSIWYG editor below.</p>
-            </div>
-            <ContentEditor
-              value={field.contentValue || ""}
-              onChange={(value) => onUpdateField(selectedPageId, field.id, { contentValue: value })}
-              placeholder="Start typing to create rich content..."
-            />
-          </div>
-        )}
-        
-        {/* Options for dropdown and multiple choice fields */}
-        {(field.type === 'dropdown' || field.type === 'multiple-choice') && (
-          <div className="field-config-section">
-            <h4>Options</h4>
-            <div className="options-list">
-              {field.options?.map((option, optionIndex) => (
-                <div key={optionIndex} className="option-row">
-                  <span>{optionIndex + 1}</span>
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) => {
-                      const newOptions = [...(field.options || [])];
-                      newOptions[optionIndex] = e.target.value;
-                      onUpdateField(selectedPageId, field.id, { options: newOptions });
-                    }}
-                    placeholder={`Option ${optionIndex + 1}`}
-                  />
-                  <button
-                    onClick={() => {
-                      const newOptions = field.options?.filter((_, i) => i !== optionIndex) || [];
-                      onUpdateField(selectedPageId, field.id, { options: newOptions });
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              className="add-option-btn"
-              onClick={() => {
-                const newOptions = [...(field.options || []), ''];
-                onUpdateField(selectedPageId, field.id, { options: newOptions });
-              }}
-            >
-              <Plus size={16} />
-              Add Option
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-});
+function App() {
+  // Check if this is a preview mode based on URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const previewId = urlParams.get('preview');
+  const liveId = urlParams.get('live');
+      {
+        id: 'field-last-name',
+        apiName: 'last_name',
+        type: 'short-text',
+        label: 'Last Name',
+        placeholder: 'Enter last name',
+        required: true
+      }
+    ]
+  },
+  {
+    id: 'page-contact',
+    type: 'form',
+    title: 'Contact Information',
+    content: 'In case we get disconnected, what\'s the best number to reach you?',
+    fields: [{
+      id: 'field-phone',
+      apiName: 'phone_number',
+      type: 'phone',
+      label: 'Contact Number',
+      placeholder: 'Enter phone number',
+      required: true
+    }]
+  },
+  {
+    id: 'page-address',
+    type: 'form',
+    title: 'Service Address',
+    content: 'Where would you like the service performed?',
+    fields: [
+      {
+        id: 'field-address',
+        apiName: 'address',
+        type: 'enhanced-address',
+        label: 'Street Address',
+        placeholder: 'Start typing an address...',
+        required: true,
+        showPropertyPreview: true,
+        zillowConnectionId: 'zillow-mock',
+        autoPopulateFields: {
+          'property_info': 'sqft'
+        }
+      },
+      {
+        id: 'field-city',
+        apiName: 'city',
+        type: 'short-text',
+        label: 'City/Town',
+        placeholder: 'Enter city',
+        required: true
+      },
+      {
+        id: 'field-state',
+        apiName: 'state',
+        type: 'short-text',
+        label: 'State/Region',
+        placeholder: 'Enter state',
+        required: true
+      },
+      {
+        id: 'field-zip',
+        apiName: 'zip_code',
+        type: 'short-text',
+        label: 'Zip/Postal Code',
+        placeholder: 'Enter zip code',
+        required: true
+      }
+    ]
+  },
+  {
+    id: 'page-property',
+    type: 'form',
+    title: 'Property Details',
+    content: 'Let me gather some property information for pricing.',
+    fields: [{
+      id: 'field-property-info',
+      apiName: 'property_info',
+      type: 'long-text',
+      label: 'Property Information',
+      placeholder: 'Square footage, lot size, special considerations',
+      helpText: 'Check coverage area maps and verify service availability'
+    }]
+  },
+  {
+    id: 'page-service-selection',
+    type: 'form',
+    title: 'Service Selection',
+    content: 'Please select the appropriate service option.',
+    fields: [{
+      id: 'field-service-type',
+      apiName: 'service_type',
+      type: 'multiple-choice',
+      label: 'Select Service Type',
+      required: true,
+      choices: [
+        { id: 'choice-basic', text: 'Basic Service' },
+        { id: 'choice-elite', text: 'My Elite (Always Start Here Unless Yard Pest Issue)' },
+        { id: 'choice-elite-plus', text: 'My Elite Plus (Start Here for yard pest problems)' },
+        { id: 'choice-monthly', text: 'Monthly Service' },
+        { id: 'choice-general', text: 'General Pest/No issues' },
+        { id: 'choice-termite', text: 'Termite Estimate/WDIR' },
+        { id: 'choice-pretreat', text: 'Pretreat' },
+        { id: 'choice-pce', text: 'PCE / TE / Commercial PCE / BBI / One Time Treatment' },
+        { id: 'choice-bedbug', text: 'Bedbug' },
+        { id: 'choice-heating', text: 'Heating Issue' },
+        { id: 'choice-cooling', text: 'Cooling Issue' },
+        { id: 'choice-plumbing', text: 'Plumbing Issue' },
+        { id: 'choice-electrical', text: 'Electrical' },
+        { id: 'choice-hvac-inspection', text: 'HVAC Real Estate Inspection' },
+        { id: 'choice-hvac-quote', text: 'HVAC NEW SYSTEM Quote' }
+      ]
+    }]
+  },
+  {
+    id: 'page-service-presentation',
+    type: 'form',
+    title: 'Service Recommendation',
+    content: 'Thank you for holding! My recommendation to take care of the pest issue would be The My Elite, this is our most popular service option...',
+    fields: [{
+      id: 'field-accept-service',
+      apiName: 'accept_service',
+      type: 'multiple-choice',
+      label: 'Would you like to proceed with this service?',
+      required: true,
+      choices: [
+        { id: 'choice-yes', text: 'Yes, let\'s set this up' },
+        { id: 'choice-no', text: 'No, I need to think about it' }
+      ]
+    }]
+  },
+  {
+    id: 'page-email',
+    type: 'form',
+    title: 'Email Address',
+    content: 'Thank you for providing that information. Could you please provide your email address?',
+    fields: [{
+      id: 'field-email',
+      apiName: 'email',
+      type: 'email',
+      label: 'Email Address',
+      placeholder: 'Enter email address',
+      required: true
+    }]
+  },
+  {
+    id: 'page-payment',
+    type: 'form',
+    title: 'Payment Information',
+    content: 'Let\'s set up payment for your service.',
+    fields: [
+      {
+        id: 'field-credit-card',
+        apiName: 'credit_card',
+        type: 'short-text',
+        label: 'Credit Card Number',
+        placeholder: 'Enter card number',
+        required: true
+      },
+      {
+        id: 'field-expiry',
+        apiName: 'card_expiry',
+        type: 'short-text',
+        label: 'Expiration Date',
+        placeholder: 'MM/YY',
+        required: true
+      },
+      {
+        id: 'field-cvv',
+        apiName: 'card_cvv',
+        type: 'short-text',
+        label: 'Security Code',
+        placeholder: 'CVV',
+        required: true
+      }
+    ]
+  },
+  {
+    id: 'page-payment-timing',
+    type: 'form',
+    title: 'Payment Terms',
+    content: 'When would you like us to process the initial payment?',
+    fields: [{
+      id: 'field-payment-timing',
+      apiName: 'payment_timing',
+      type: 'multiple-choice',
+      label: 'Payment Timing',
+      required: true,
+      choices: [
+        { id: 'choice-today', text: 'Today' },
+        { id: 'choice-service-day', text: 'Day of service' },
+        { id: 'choice-other', text: 'Other arrangement' }
+      ]
+    }]
+  },
+  {
+    id: 'page-billing',
+    type: 'form',
+    title: 'Billing Address',
+    content: 'Is your billing address the same as the service address?',
+    fields: [{
+      id: 'field-billing-same',
+      apiName: 'billing_same',
+      type: 'multiple-choice',
+      label: 'Billing Address',
+      required: true,
+      choices: [
+        { id: 'choice-same', text: 'Same as service address' },
+        { id: 'choice-different', text: 'Different billing address' }
+      ]
+    }]
+  },
+  {
+    id: 'page-scheduling',
+    type: 'form',
+    title: 'Appointment Scheduling',
+    content: 'Let\'s schedule your service appointment.',
+    fields: [{
+      id: 'field-service-details',
+      apiName: 'service_details',
+      type: 'long-text',
+      label: 'Service Details',
+      placeholder: 'Price, date, time, special instructions',
+      required: true,
+      helpText: 'Include pricing and appointment details'
+    }]
+  },
+  {
+    id: 'page-sales-rep',
+    type: 'form',
+    title: 'Sales Representative',
+    content: 'Who handled this sale?',
+    fields: [{
+      id: 'field-sales-rep',
+      apiName: 'sales_rep',
+      type: 'dropdown',
+      label: 'Sales Representative',
+      required: true,
+      choices: [
+        { id: 'choice-jessica', text: 'Jessica Francis' },
+        { id: 'choice-other', text: 'Other Representative' }
+      ]
+    }]
+  },
+  {
+    id: 'page-questions',
+    type: 'form',
+    title: 'Additional Questions',
+    content: 'Do you have any additional questions or concerns for me today?',
+    fields: [{
+      id: 'field-questions',
+      apiName: 'customer_questions',
+      type: 'long-text',
+      label: 'Customer Questions & Notes',
+      placeholder: 'Any additional questions, concerns, or notes',
+      helpText: 'Document any final questions and put quote information with your name'
+    }]
+  },
+  {
+    id: 'page-hvac-upsell',
+    type: 'form',
+    title: 'HVAC Maintenance Offer',
+    content: 'Since you already trust us to protect your home from pests, we also offer a comprehensive HVAC maintenance plan...',
+    fields: [{
+      id: 'field-hvac-upsell',
+      apiName: 'hvac_upsell',
+      type: 'multiple-choice',
+      label: 'HVAC Maintenance Plan ($10/month)',
+      choices: [
+        { id: 'choice-hvac-yes', text: 'Yes, add HVAC maintenance' },
+        { id: 'choice-hvac-no', text: 'No, just pest control' }
+      ]
+    }]
+  },
+  {
+    id: 'page-completion',
+    type: 'ending',
+    title: 'Call Completion',
+    content: 'Thank you for choosing Go-Forth Home Services! We\'ll see you at your scheduled appointment time.'
+  }
+];
 
 function App() {
-  // Check if this is a preview mode based on URL parameters or path
+  // Check if this is a preview mode based on URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  let previewId = urlParams.get('preview');
+  const previewId = urlParams.get('preview');
   const liveId = urlParams.get('live');
-  
-  // Handle /s/ URL format (e.g., /s/scriptId) by extracting scriptId for preview
-  const pathMatch = window.location.pathname.match(/^\/s\/(.+)$/);
-  if (pathMatch && !previewId) {
-    previewId = pathMatch[1];
-    console.log('Detected /s/ URL format, using as preview:', previewId);
-  }
   
   // Get Firestore-integrated data
   const appData = useAppData();
   
-  // Function to get script data from localStorage or published scripts
+  // Function to get script data from localStorage for preview mode
   const getScriptData = (scriptId: string) => {
-    // First try localStorage for working scripts
-    const localData = window.localStorage.getItem(`script-${scriptId}`);
-    if (localData) {
+    const data = window.localStorage.getItem(`script-${scriptId}`);
+    if (data) {
       try {
-        const parsed = JSON.parse(localData);
+        const parsed = JSON.parse(data);
         return {
           pages: parsed.pages || [],
           logicRules: parsed.logicRules || {}
         };
       } catch (err) {
-        console.error('Error parsing local script data:', err);
+        console.error('Error parsing script data:', err);
+        return null;
       }
     }
-
-    // Then check published scripts
-    const publishedScript = appData.publishedScripts.find(script => script.id === scriptId);
-    if (publishedScript) {
-      return {
-        pages: publishedScript.pages || [],
-        logicRules: {} // Published scripts don't store logic rules
-      };
-    }
-
-    // For live scripts, provide a default demo script if none found
-    if (scriptId.startsWith('live-')) {
-      console.log('Live script not found, providing demo script:', scriptId);
-      return {
-        pages: [
-          {
-            id: 'welcome',
-            type: 'form' as const,
-            title: 'Demo Form',
-            fields: [
-              {
-                id: 'name',
-                type: 'text' as const,
-                label: 'Your Name',
-                required: true,
-                apiName: 'name'
-              },
-              {
-                id: 'email',
-                type: 'email' as const,
-                label: 'Email Address', 
-                required: true,
-                apiName: 'email'
-              }
-            ]
-          }
-        ],
-        logicRules: {}
-      };
-    }
-
     return null;
   };
   
   // If preview mode, show the public preview component
   if (previewId) {
-    // Enhanced getScriptData for preview that includes a fallback
-    const getPreviewScriptData = (scriptId: string) => {
-      const scriptData = getScriptData(scriptId);
-      if (scriptData) {
-        return scriptData;
-      }
-      
-      // Fallback demo script for preview if no script found
-      console.log('No script found for preview, providing demo script');
-      return {
-        pages: [
-          {
-            id: 'welcome',
-            type: 'welcome' as const,
-            title: 'Demo Preview Form',
-            content: 'This is a demo form for preview purposes.',
-            visible: true
-          },
-          {
-            id: 'form',
-            type: 'form' as const,
-            title: 'Contact Information',
-            fields: [
-              {
-                id: 'name',
-                type: 'text' as const,
-                label: 'Full Name',
-                required: true,
-                apiName: 'name'
-              },
-              {
-                id: 'email',
-                type: 'email' as const,
-                label: 'Email Address',
-                required: true,
-                apiName: 'email'
-              },
-              {
-                id: 'phone',
-                type: 'tel' as const,
-                label: 'Phone Number',
-                required: false,
-                apiName: 'phone'
-              }
-            ],
-            visible: true
-          },
-          {
-            id: 'thank-you',
-            type: 'ending' as const,
-            title: 'Thank You!',
-            content: 'Thank you for testing the demo preview.',
-            visible: true
-          }
-        ],
-        logicRules: {
-          'welcome': 'form',
-          'form': 'thank-you'
-        }
-      };
-    };
-    
-    return <PublicPreview getScriptData={getPreviewScriptData} />;
+    return <PublicPreview getScriptData={getScriptData} />;
   }
   
   // If live mode, show the live script component
@@ -508,7 +455,7 @@ function App() {
   }
 
   const { isAuthenticated, isLoading, user, logout, hasModuleAccess, hasPermission } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'content' | 'workflow' | 'connect' | 'share' | 'data' | 'users' | 'roles'>('dashboard');
+  const [activeView, setActiveView] = useState<'content' | 'workflow' | 'connect' | 'share' | 'data' | 'users' | 'roles'>('content');
 
   // Load webhooks from Firestore on app start
   React.useEffect(() => {
@@ -530,59 +477,28 @@ function App() {
     loadWebhooks();
   }, [isAuthenticated]);
 
-  // Zillow integration temporarily disabled due to initialization conflicts
-  // TODO: Re-implement Zillow integration with proper error handling
-
   // Check if current view is accessible, if not redirect to first available
   const getValidActiveView = () => {
     if (!isAuthenticated || !user) return activeView;
-    
-    // Dashboard is always accessible to all authenticated users
-    if (activeView === 'dashboard') {
-      return activeView;
-    }
     
     const currentModuleId = activeView === 'data' ? 'leads' : activeView;
     if (hasModuleAccess(currentModuleId)) {
       return activeView;
     }
     
-    // Find first available module, with dashboard as the first option
-    const availableModules = ['dashboard', 'share', 'data', 'content', 'workflow', 'connect', 'users', 'roles'] as const;
+    // Find first available module
+    const availableModules = ['share', 'data', 'content', 'workflow', 'connect', 'users', 'roles'] as const;
     const firstAvailable = availableModules.find(module => {
-      if (module === 'dashboard') return true; // Dashboard is always available
       const moduleId = module === 'data' ? 'leads' : module;
       return hasModuleAccess(moduleId);
     });
     
-    return firstAvailable || 'dashboard'; // Fallback to dashboard
+    return firstAvailable || 'share'; // Fallback to share
   };
 
   const validActiveView = getValidActiveView();
   const [formPages, setFormPages] = useState<FormPage[]>(initialPages);
-
-  // Stable field update functions to prevent recreations
-  const updateField = useCallback((pageId: string, fieldId: string, updates: Partial<FormField>) => {
-    setFormPages(pages => pages.map(p => 
-      p.id === pageId ? {
-        ...p,
-        fields: p.fields?.map(f => 
-          f.id === fieldId ? { ...f, ...updates } : f
-        )
-      } : p
-    ));
-  }, []);
-
-  const deleteField = useCallback((pageId: string, fieldId: string) => {
-    setFormPages(pages => pages.map(p => 
-      p.id === pageId ? {
-        ...p,
-        fields: p.fields?.filter(f => f.id !== fieldId)
-      } : p
-    ));
-  }, []);
   const [selectedPageId, setSelectedPageId] = useState<string | null>('page-welcome');
-  
   const [hasAutoLayoutRun, setHasAutoLayoutRun] = useState(false);
   
   // Webhook connections state with sample data
@@ -669,9 +585,9 @@ function App() {
   // Zillow connections state
   const [zillowConnections, setZillowConnections] = useState<ZillowConnection[]>([
     {
-      id: 'zillow-prod',
-      name: 'Production Zillow API',
-      apiKey: '720c9f75b4mshc000a48d1ab5353p1e9212jsnfda95ae44e14',
+      id: 'zillow-mock',
+      name: 'Mock Zillow Data',
+      apiKey: '',
       apiProvider: 'rapidapi',
       apiUrl: 'https://zillow-com1.p.rapidapi.com',
       rateLimit: 500,
@@ -679,15 +595,11 @@ function App() {
       createdAt: new Date().toISOString()
     }
   ]);
-  const [selectedZillowConnectionId, setSelectedZillowConnectionId] = useState<string | null>('zillow-prod');
+  const [selectedZillowConnectionId, setSelectedZillowConnectionId] = useState<string | null>('zillow-mock');
   const [showCreateZillowConnection, setShowCreateZillowConnection] = useState(false);
   
   // Submission viewing state
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
-
-  // Webhook trigger editing state
-  const [showTriggerEditor, setShowTriggerEditor] = useState(false);
-  const [selectedTrigger, setSelectedTrigger] = useState<WebhookTrigger | null>(null);
   
   // Leads table filters
   const [leadsFilters, setLeadsFilters] = useState({
@@ -771,107 +683,6 @@ function App() {
     // Clean start - no connections defined
   });
 
-  // Working script management
-  const WORKING_SCRIPT_KEY = 'working-script-id';
-  const [workingScriptId, setWorkingScriptId] = useState<string | null>(null);
-  const [isLoadingScript, setIsLoadingScript] = useState(true);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Load or create working script on initialization
-  useEffect(() => {
-    const initializeWorkingScript = async () => {
-      if (!isAuthenticated || !user) {
-        setIsLoadingScript(false);
-        return;
-      }
-      
-      try {
-        // Check if we have a stored working script ID
-        const storedScriptId = localStorage.getItem(WORKING_SCRIPT_KEY);
-        
-        if (storedScriptId) {
-          // Try to load the existing script
-          const existingScript = await scriptService.getScript(storedScriptId);
-          
-          if (existingScript && existingScript.pages) {
-            console.log('Loaded existing working script:', storedScriptId);
-            setFormPages(existingScript.pages);
-            setWorkingScriptId(storedScriptId);
-            
-            // Load logic rules from localStorage for now
-            const storedRules = localStorage.getItem('script-logic-rules');
-            if (storedRules) {
-              try {
-                setLogicRules(JSON.parse(storedRules));
-              } catch (error) {
-                console.error('Failed to parse stored logic rules:', error);
-              }
-            }
-          } else {
-            // Script not found or invalid, create new one
-            console.log('Working script not found, creating new one');
-            const newScriptId = await createNewWorkingScript();
-            setWorkingScriptId(newScriptId);
-          }
-        } else {
-          // No stored script ID, create new working script
-          console.log('Creating new working script');
-          const newScriptId = await createNewWorkingScript();
-          setWorkingScriptId(newScriptId);
-        }
-      } catch (error) {
-        console.error('Failed to initialize working script:', error);
-      } finally {
-        setIsLoadingScript(false);
-      }
-    };
-    
-    initializeWorkingScript();
-  }, [isAuthenticated, user]);
-  
-  // Create new working script
-  const createNewWorkingScript = async () => {
-    const scriptId = await scriptService.createScript({
-      name: 'Working Script',
-      pages: initialPages, // Use initial pages for new scripts
-      createdBy: user?.id || 'anonymous'
-    });
-    localStorage.setItem(WORKING_SCRIPT_KEY, scriptId);
-    console.log('Created new working script:', scriptId);
-    return scriptId;
-  };
-  
-  // Debounced save to Firestore
-  const debouncedSaveToFirestore = useCallback(async (pages: FormPage[], rules: Record<string, string>) => {
-    if (!workingScriptId || !isAuthenticated) return;
-    
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        await scriptService.updateScript(workingScriptId, {
-          pages: pages
-        });
-        console.log('Pages auto-saved to Firestore');
-        
-        // Also save logic rules to localStorage for now
-        // TODO: Add logic rules to script schema in Firestore
-        localStorage.setItem('script-logic-rules', JSON.stringify(rules));
-      } catch (error) {
-        console.error('Failed to auto-save pages:', error);
-      }
-    }, 1000); // 1 second debounce
-  }, [workingScriptId, isAuthenticated]);
-  
-  // Auto-save whenever formPages or logicRules change
-  useEffect(() => {
-    if (formPages.length > 0 && !isLoadingScript) {
-      debouncedSaveToFirestore(formPages, logicRules);
-    }
-  }, [formPages, logicRules, debouncedSaveToFirestore, isLoadingScript]);
-
   // Initialize nodes only once, then preserve positions
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
@@ -909,11 +720,8 @@ function App() {
           trigger,
           connection: webhookConnections.find(conn => conn.id === trigger.connectionId),
           onEdit: (triggerId: string) => {
-            const trigger = webhookTriggers.find(t => t.id === triggerId);
-            if (trigger) {
-              setSelectedTrigger(trigger);
-              setShowTriggerEditor(true);
-            }
+            // TODO: Open trigger edit modal
+            console.log('Edit trigger:', triggerId);
           },
         },
       }));
@@ -1135,10 +943,10 @@ function App() {
     onEdgesChangeBase(changes);
   }, [edges, formPages, onEdgesChangeBase]);
 
-  // Update edges when logic rules change or pages change (but not auto-create placeholder connections)
+  // Update edges when formPages or logicRules change
   React.useEffect(() => {
     setEdges(createInitialEdges());
-  }, [logicRules, formPages, createInitialEdges, setEdges]);
+  }, [formPages, logicRules, createInitialEdges, setEdges]);
 
   // Handle preview in new window/tab
   const handlePreview = async () => {
@@ -1164,22 +972,15 @@ function App() {
     // Generate a temporary script ID for the live session
     const liveScriptId = 'live-' + Date.now();
     
-    console.log('Starting live call with script:', script);
-    console.log('Script pages:', script.pages);
-    
-    // Ensure we have valid pages data
-    const pages = script.pages && script.pages.length > 0 ? script.pages : formPages;
-    console.log('Using pages for live script:', pages);
-    
     // Store the script data for the live session (now using Firestore)
     await saveScript({ 
-      pages: pages,
+      pages: script.pages,
       logicRules: {}, // Could include script logic rules if available
-      title: script.name || 'Live Script',
-      description: script.description || 'Live script for calling'
+      title: script.name,
+      description: script.description
     }, liveScriptId);
     
-    // Create live URL with query parameter format (same as preview)
+    // Create live URL with query parameter
     const liveUrl = `${window.location.origin}?live=${liveScriptId}`;
     
     // Open live script in new tab
@@ -1286,7 +1087,23 @@ function App() {
       }
     });
     
-    // Removed auto connections - let users create their own connections manually
+    // Add placeholder connections for auto layout (same logic as createInitialEdges)
+    const pagesWithRules = new Set();
+    Object.keys(logicRules).forEach(ruleKey => {
+      // Find which page this rule belongs to using the same robust logic
+      const matchingPage = formPages.find(page => ruleKey.startsWith(page.id + '-') || ruleKey === page.id);
+      if (matchingPage) {
+        pagesWithRules.add(matchingPage.id);
+      }
+    });
+    
+    // Create placeholder connections for layout purposes
+    formPages.forEach((page, index) => {
+      if (!pagesWithRules.has(page.id) && index < formPages.length - 1) {
+        const nextPage = formPages[index + 1];
+        addConnection(page.id, nextPage.id);
+      }
+    });
     
     // Separate connected and unconnected nodes
     const connectedNodesList = allNodes.filter(node => connectedNodes.has(node.id));
@@ -1455,20 +1272,41 @@ function App() {
     );
   };
 
-  // Removed auto-trigger layout - users can manually trigger layout
+  // Auto-trigger layout when switching to workflow view
+  React.useEffect(() => {
+    if (activeView === 'workflow' && !hasAutoLayoutRun && nodes.length > 0) {
+      // Longer delay to ensure all nodes and edges are properly initialized
+      const timeoutId = setTimeout(() => {
+        autoLayout();
+        setHasAutoLayoutRun(true);
+      }, 300);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [activeView, nodes.length, hasAutoLayoutRun]);
 
   // Reset auto layout flag when pages or triggers change significantly
   React.useEffect(() => {
     setHasAutoLayoutRun(false);
   }, [formPages.length, webhookTriggers.length]);
 
-  // Removed updateConnections function - connections are now manual only
+  // Update connections function
+  const updateConnections = () => {
+    setEdges(createInitialEdges());
+  };
 
   // Handle node position changes
   const handleNodesChange = useCallback((changes: any) => {
     onNodesChange(changes);
-    // Removed auto-connection updates when nodes are moved
-  }, [onNodesChange]);
+    // Check if any nodes were moved and update connections
+    const hasMoved = changes.some((change: any) => change.type === 'position' && change.dragging === false);
+    if (hasMoved && nodes.length > 0) {
+      // Small delay to ensure node positions are updated
+      setTimeout(() => {
+        setEdges(createInitialEdges());
+      }, 100);
+    }
+  }, [onNodesChange, createInitialEdges, setEdges, nodes]);
 
   // Update logic rule
   const updateLogicRule = (ruleKey: string, targetPageId: string) => {
@@ -1926,7 +1764,7 @@ function App() {
     settings?: Partial<PublishedScript['settings']>;
   }) => {
     const scriptId = `script-${Date.now()}`;
-    const accessUrl = `/s/${scriptId}`;
+    const accessUrl = `/published/${scriptId}`;
     
     const newScript: PublishedScript = {
       id: scriptId,
@@ -1955,18 +1793,9 @@ function App() {
     
     // Save to Firestore using the hook function
     await publishScript(newScript);
-    
-    // Also save to localStorage for immediate access/preview
-    const localScriptData = {
-      title: newScript.name,
-      pages: newScript.pages,
-      webhookConnections: newScript.webhookConnections || []
-    };
-    window.localStorage.setItem(`script-${scriptId}`, JSON.stringify(localScriptData));
-    
     setShowPublishDialog(false);
     
-    console.log('Published script to Firestore and localStorage:', newScript);
+    console.log('Published script to Firestore:', newScript);
     return newScript;
   };
 
@@ -1980,19 +1809,8 @@ function App() {
     );
   };
 
-  const deletePublishedScript = async (scriptId: string) => {
-    try {
-      // First, delete from Firestore
-      await publishedScriptService.deletePublishedScript(scriptId);
-      
-      // Then update local state
-      setPublishedScripts(prev => prev.filter(script => script.id !== scriptId));
-      
-      console.log('Published script deleted successfully:', scriptId);
-    } catch (error) {
-      console.error('Failed to delete published script:', error);
-      alert('Failed to delete script. Please try again.');
-    }
+  const deletePublishedScript = (scriptId: string) => {
+    setPublishedScripts(prev => prev.filter(script => script.id !== scriptId));
   };
 
   const republishScript = (scriptId: string) => {
@@ -2056,6 +1874,7 @@ function App() {
             deletePage(page.id);
           }}
           onMouseDown={(e) => e.stopPropagation()}
+          title={`Delete ${page.name}`}
         >
           <Trash2 size={14} />
         </button>
@@ -2063,205 +1882,397 @@ function App() {
     );
   };
 
-  // SortableFieldItem is now defined outside App component
+  // Sortable Field Item Component
+  const SortableFieldItem = ({ field, fieldIndex, selectedPageId }: { 
+    field: FormField; 
+    fieldIndex: number; 
+    selectedPageId: string;
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: field.id });
 
-  // Webhook Trigger Editor Component
-  const WebhookTriggerEditor = () => {
-    if (!selectedTrigger) return null;
-
-    const [formData, setFormData] = useState({
-      name: selectedTrigger.name,
-      connectionId: selectedTrigger.connectionId,
-      triggerType: selectedTrigger.triggerType,
-      isActive: selectedTrigger.isActive,
-      targetPageId: '', // New field to specify which page this trigger should connect to
-      condition: selectedTrigger.condition || { condition: 'equals', value: '', nextPageId: '' }
-    });
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-
-      const updatedTrigger: WebhookTrigger = {
-        ...selectedTrigger,
-        name: formData.name,
-        connectionId: formData.connectionId,
-        triggerType: formData.triggerType,
-        isActive: formData.isActive,
-        condition: formData.triggerType === 'conditional' ? formData.condition : undefined
-      };
-
-      updateWebhookTrigger(selectedTrigger.id, updatedTrigger);
-
-      // If a target page is specified, create a connection
-      if (formData.targetPageId) {
-        const ruleKey = `${selectedTrigger.id}-to-${formData.targetPageId}`;
-        setLogicRules(prev => ({
-          ...prev,
-          [ruleKey]: formData.targetPageId
-        }));
-      }
-
-      setShowTriggerEditor(false);
-      setSelectedTrigger(null);
-    };
-
-    const handleCancel = () => {
-      setShowTriggerEditor(false);
-      setSelectedTrigger(null);
-    };
-
-    const handleDelete = () => {
-      if (confirm('Are you sure you want to delete this webhook trigger?')) {
-        deleteWebhookTrigger(selectedTrigger.id);
-        setShowTriggerEditor(false);
-        setSelectedTrigger(null);
-      }
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
     };
 
     return (
-      <div className="modal-overlay" style={{ zIndex: 9999 }}>
-        <div className="modal-content webhook-trigger-editor">
-          <div className="modal-header">
-            <h2>Edit Webhook Trigger</h2>
-            <button onClick={handleCancel} className="close-btn">
-              <X size={20} />
-            </button>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`field-editor ${isDragging ? 'dragging' : ''}`}
+      >
+        <div className="field-header">
+          <div 
+            className="field-drag-handle"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical size={16} />
+          </div>
+          <span className="field-number">{fieldIndex + 1}</span>
+          <input
+            type="text"
+            className="field-label-input"
+            value={field.label}
+            key={`field-label-${field.id}`}
+            onChange={(e) => {
+              const newLabel = e.target.value;
+              const updatedPages = formPages.map(p => 
+                p.id === selectedPageId ? {
+                  ...p,
+                  fields: p.fields?.map(f => 
+                    f.id === field.id ? { 
+                      ...f, 
+                      label: newLabel,
+                      // Auto-update API name if it matches the generated name from old label
+                      apiName: f.apiName === generateApiName(field.label) ? 
+                        ensureUniqueApiName(generateApiName(newLabel), p.fields || [], f.id) : 
+                        f.apiName
+                    } : f
+                  )
+                } : p
+              );
+              setFormPages(updatedPages);
+            }}
+            placeholder="Field label..."
+          />
+          <button
+            className="delete-field-btn"
+            onClick={() => {
+              const updatedPages = formPages.map(p => 
+                p.id === selectedPageId ? {
+                  ...p,
+                  fields: p.fields?.filter(f => f.id !== field.id)
+                } : p
+              );
+              setFormPages(updatedPages);
+            }}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+
+        <div className="field-config">
+          <div className="field-meta-section">
+            <div className="field-id-display">
+              <label>Field ID</label>
+              <code className="field-id-code">{field.id}</code>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="trigger-form">
-            <div className="form-section">
-              <h3>Trigger Details</h3>
-              
-              <div className="form-group">
-                <label>Trigger Name *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter trigger name..."
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Webhook Connection *</label>
-                <select
-                  value={formData.connectionId}
-                  onChange={(e) => setFormData({ ...formData, connectionId: e.target.value })}
-                  required
-                >
-                  <option value="">Select a connection...</option>
-                  {webhookConnections.map(conn => (
-                    <option key={conn.id} value={conn.id}>
-                      {conn.name} {!conn.isActive ? '(Inactive)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Trigger Type *</label>
-                <select
-                  value={formData.triggerType}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    triggerType: e.target.value as 'on_entry' | 'on_exit' | 'conditional'
-                  })}
-                  required
-                >
-                  <option value="on_entry">On Entry - Fires when user enters a page</option>
-                  <option value="on_exit">On Exit - Fires when user leaves a page</option>
-                  <option value="conditional">Conditional - Fires based on form data</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Target Page</label>
-                <select
-                  value={formData.targetPageId}
-                  onChange={(e) => setFormData({ ...formData, targetPageId: e.target.value })}
-                >
-                  <option value="">Select which page triggers this webhook...</option>
-                  {formPages.map(page => (
-                    <option key={page.id} value={page.id}>
-                      {page.title} ({page.type})
-                    </option>
-                  ))}
-                </select>
-                <small>Choose which page this webhook should be connected to in the workflow</small>
-              </div>
-
-              {formData.triggerType === 'conditional' && (
-                <div className="conditional-section">
-                  <h4>Conditional Logic</h4>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Condition</label>
-                      <select
-                        value={formData.condition.condition}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          condition: {
-                            ...formData.condition,
-                            condition: e.target.value as 'equals' | 'contains' | 'greater_than' | 'less_than' | 'any'
-                          }
-                        })}
-                      >
-                        <option value="equals">Equals</option>
-                        <option value="contains">Contains</option>
-                        <option value="greater_than">Greater Than</option>
-                        <option value="less_than">Less Than</option>
-                        <option value="any">Any Value</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Value</label>
-                      <input
-                        type="text"
-                        value={formData.condition.value}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          condition: {
-                            ...formData.condition,
-                            value: e.target.value
-                          }
-                        })}
-                        placeholder="Enter comparison value..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                  Active (trigger will fire when conditions are met)
-                </label>
-              </div>
+          <div className="field-config-row">
+            <div className="field-config-item">
+              <label>API Name</label>
+              <input
+                type="text"
+                value={field.apiName}
+                key={`api-name-${field.id}`}
+                onChange={(e) => {
+                  const newApiName = e.target.value;
+                  const updatedPages = formPages.map(p => 
+                    p.id === selectedPageId ? {
+                      ...p,
+                      fields: p.fields?.map(f => 
+                        f.id === field.id ? { ...f, apiName: newApiName } : f
+                      )
+                    } : p
+                  );
+                  setFormPages(updatedPages);
+                }}
+                onBlur={(e) => {
+                  const sanitizedApiName = ensureUniqueApiName(e.target.value, 
+                    formPages.find(p => p.id === selectedPageId)?.fields || [], 
+                    field.id
+                  );
+                  if (sanitizedApiName !== e.target.value) {
+                    const updatedPages = formPages.map(p => 
+                      p.id === selectedPageId ? {
+                        ...p,
+                        fields: p.fields?.map(f => 
+                          f.id === field.id ? { ...f, apiName: sanitizedApiName } : f
+                        )
+                      } : p
+                    );
+                    setFormPages(updatedPages);
+                  }
+                }}
+                className="api-name-input"
+                placeholder="field_name"
+              />
             </div>
-
-            <div className="form-actions">
-              <button 
-                type="button" 
-                onClick={handleDelete}
-                className="btn btn-danger"
-                style={{ marginRight: 'auto' }}
+            <div className="field-config-item">
+              <label>Field Type</label>
+              <select
+                value={field.type}
+                onChange={(e) => {
+                  const newType = e.target.value as any;
+                  const updatedPages = formPages.map(p => 
+                    p.id === selectedPageId ? {
+                      ...p,
+                      fields: p.fields?.map(f => 
+                        f.id === field.id ? { ...f, type: newType } : f
+                      )
+                    } : p
+                  );
+                  setFormPages(updatedPages);
+                }}
               >
-                Delete Trigger
-              </button>
-              <button type="button" onClick={handleCancel} className="btn btn-secondary">
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Save Changes
-              </button>
+                <option value="short-text">Short Text</option>
+                <option value="long-text">Long Text</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="url">URL</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="time">Time</option>
+                <option value="multiple-choice">Multiple Choice</option>
+                <option value="checkbox">Checkbox</option>
+                <option value="dropdown">Dropdown</option>
+                <option value="rating">Rating</option>
+                <option value="file-upload">File Upload</option>
+                <option value="enhanced-address">Enhanced Address</option>
+              </select>
             </div>
-          </form>
+          </div>
+
+          <div className="field-config-row">
+            <div className="field-config-item">
+              <label>Placeholder Text</label>
+              <input
+                type="text"
+                value={field.placeholder || ''}
+                key={`placeholder-${field.id}`}
+                onChange={(e) => {
+                  const updatedPages = formPages.map(p => 
+                    p.id === selectedPageId ? {
+                      ...p,
+                      fields: p.fields?.map(f => 
+                        f.id === field.id ? { ...f, placeholder: e.target.value } : f
+                      )
+                    } : p
+                  );
+                  setFormPages(updatedPages);
+                }}
+                placeholder="Enter placeholder text..."
+              />
+            </div>
+            <div className="field-config-item">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={field.required || false}
+                  onChange={(e) => {
+                    const updatedPages = formPages.map(p => 
+                      p.id === selectedPageId ? {
+                        ...p,
+                        fields: p.fields?.map(f => 
+                          f.id === field.id ? { ...f, required: e.target.checked } : f
+                        )
+                      } : p
+                    );
+                    setFormPages(updatedPages);
+                  }}
+                />
+                Required field
+              </label>
+            </div>
+          </div>
+
+          {(field.type === 'multiple-choice' || field.type === 'checkbox' || field.type === 'dropdown') && (
+            <div className="field-choices-section">
+              <label>Options</label>
+              <div className="choices-list">
+                {field.choices?.map((choice) => (
+                  <div key={choice.id} className="choice-item">
+                    <input
+                      type="text"
+                      value={choice.text}
+                      key={`choice-text-${choice.id}`}
+                      onChange={(e) => {
+                        const updatedPages = formPages.map(p => 
+                          p.id === selectedPageId ? {
+                            ...p,
+                            fields: p.fields?.map(f => 
+                              f.id === field.id ? {
+                                ...f,
+                                choices: f.choices?.map(c => 
+                                  c.id === choice.id ? { ...c, text: e.target.value } : c
+                                )
+                              } : f
+                            )
+                          } : p
+                        );
+                        setFormPages(updatedPages);
+                      }}
+                      placeholder="Option text..."
+                    />
+                    <button
+                      onClick={() => {
+                        const updatedPages = formPages.map(p => 
+                          p.id === selectedPageId ? {
+                            ...p,
+                            fields: p.fields?.map(f => 
+                              f.id === field.id ? {
+                                ...f,
+                                choices: f.choices?.filter(c => c.id !== choice.id)
+                              } : f
+                            )
+                          } : p
+                        );
+                        setFormPages(updatedPages);
+                      }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  className="add-choice-btn"
+                  onClick={() => {
+                    const newChoice = { 
+                      id: `choice-${Date.now()}`, 
+                      text: `Option ${(field.choices?.length || 0) + 1}` 
+                    };
+                    const updatedPages = formPages.map(p => 
+                      p.id === selectedPageId ? {
+                        ...p,
+                        fields: p.fields?.map(f => 
+                          f.id === field.id ? {
+                            ...f,
+                            choices: [...(f.choices || []), newChoice]
+                          } : f
+                        )
+                      } : p
+                    );
+                    setFormPages(updatedPages);
+                  }}
+                >
+                  <Plus size={12} />
+                  Add Option
+                </button>
+              </div>
+            </div>
+          )}
+
+          {field.type === 'enhanced-address' && (
+            <div className="field-enhanced-address-section">
+              <label>Enhanced Address Settings</label>
+              
+              <div className="field-config-row">
+                <div className="field-config-item">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={field.showPropertyPreview || false}
+                      onChange={(e) => {
+                        const updatedPages = formPages.map(p => 
+                          p.id === selectedPageId ? {
+                            ...p,
+                            fields: p.fields?.map(f => 
+                              f.id === field.id ? { ...f, showPropertyPreview: e.target.checked } : f
+                            )
+                          } : p
+                        );
+                        setFormPages(updatedPages);
+                      }}
+                    />
+                    Show property preview card
+                  </label>
+                </div>
+              </div>
+
+              <div className="field-config-row">
+                <div className="field-config-item">
+                  <label>Zillow Connection</label>
+                  <select
+                    value={field.zillowConnectionId || ''}
+                    onChange={(e) => {
+                      const updatedPages = formPages.map(p => 
+                        p.id === selectedPageId ? {
+                          ...p,
+                          fields: p.fields?.map(f => 
+                            f.id === field.id ? { ...f, zillowConnectionId: e.target.value } : f
+                          )
+                        } : p
+                      );
+                      setFormPages(updatedPages);
+                    }}
+                  >
+                    <option value="">Use default connection</option>
+                    {zillowConnections.map(conn => (
+                      <option key={conn.id} value={conn.id}>
+                        {conn.name} {conn.isActive ? '' : '(Inactive)'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="field-config-row">
+                <label>Auto-populate Fields</label>
+                <div className="auto-populate-info">
+                  When a property is selected, these fields will be automatically populated:
+                </div>
+                <div className="auto-populate-fields">
+                  {formPages.find(p => p.id === selectedPageId)?.fields
+                    ?.filter(f => f.id !== field.id && (f.type === 'short-text' || f.type === 'number'))
+                    .map(targetField => (
+                      <label key={targetField.id} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={!!field.autoPopulateFields?.[targetField.apiName]}
+                          onChange={(e) => {
+                            const autoPopulate = { ...(field.autoPopulateFields || {}) };
+                            if (e.target.checked) {
+                              // Map common field names to property data keys
+                              let propertyKey = '';
+                              const apiNameLower = targetField.apiName.toLowerCase();
+                              if (apiNameLower.includes('sqft') || apiNameLower.includes('square')) {
+                                propertyKey = 'sqft';
+                              } else if (apiNameLower.includes('lot')) {
+                                propertyKey = 'lotSize';
+                              } else if (apiNameLower.includes('year')) {
+                                propertyKey = 'yearBuilt';
+                              } else if (apiNameLower.includes('bed')) {
+                                propertyKey = 'bedrooms';
+                              } else if (apiNameLower.includes('bath')) {
+                                propertyKey = 'bathrooms';
+                              }
+                              
+                              if (propertyKey) {
+                                autoPopulate[targetField.apiName] = propertyKey;
+                              }
+                            } else {
+                              delete autoPopulate[targetField.apiName];
+                            }
+                            
+                            const updatedPages = formPages.map(p => 
+                              p.id === selectedPageId ? {
+                                ...p,
+                                fields: p.fields?.map(f => 
+                                  f.id === field.id ? { ...f, autoPopulateFields: autoPopulate } : f
+                                )
+                              } : p
+                            );
+                            setFormPages(updatedPages);
+                          }}
+                        />
+                        {targetField.label} ({targetField.apiName})
+                      </label>
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -2514,9 +2525,6 @@ function App() {
 
   const renderSidebar = () => {
     switch (validActiveView) {
-      case 'dashboard':
-        return null; // Dashboard doesn't need a sidebar
-        
       case 'content':
         return (
           <div className="sidebar">
@@ -2679,21 +2687,21 @@ function App() {
                     </div>
                   ) : selectedPage.type === 'form' && selectedPage.fields ? (
                     <div className="logic-rules">
-                      {/* Show choice-based routing for form fields with options */}
+                      {/* Show choice-based routing for form fields with choices */}
                       {selectedPage.fields
-                        .filter(field => (field.options && field.options.length > 0) || (field.choices && field.choices.length > 0))
+                        .filter(field => field.choices && field.choices.length > 0)
                         .map(field => (
                           <div key={field.id} className="field-logic-group">
                             <h5 className="field-logic-title">{field.label}</h5>
-                            {(field.options || field.choices)?.map(option => {
-                              const ruleKey = `${selectedPage.id}-${field.id}-${option.id}`;
+                            {field.choices?.map(choice => {
+                              const ruleKey = `${selectedPage.id}-${field.id}-${choice.id}`;
                               const currentTarget = logicRules[ruleKey] || 'end';
                               
                               return (
-                                <div key={option.id} className="logic-rule">
+                                <div key={choice.id} className="logic-rule">
                                   <div className="rule-condition">
                                     <span className="condition-label">If customer selects:</span>
-                                    <span className="condition-value">"{option.text || option.label}"</span>
+                                    <span className="condition-value">"{choice.text}"</span>
                                   </div>
                                   <div className="rule-action">
                                     <span className="action-label">Go to:</span>
@@ -2717,7 +2725,7 @@ function App() {
                         ))}
                       
                       {/* Default flow for pages without conditional routing */}
-                      {selectedPage.fields.filter(field => (field.options && field.options.length > 0) || (field.choices && field.choices.length > 0)).length === 0 && (
+                      {selectedPage.fields.filter(field => field.choices && field.choices.length > 0).length === 0 && (
                         <div className="logic-rule">
                           <div className="rule-condition">
                             <span className="condition-label">Page flow:</span>
@@ -2769,9 +2777,12 @@ function App() {
                 </div>
 
                 <div className="workflow-actions">
-                  <p className="workflow-note">
-                    <strong>Note:</strong> Create connections manually by dragging from one page's output to another page's input.
-                  </p>
+                  <button 
+                    onClick={updateConnections}
+                    className="btn btn-primary"
+                  >
+                    Update Connections
+                  </button>
                 </div>
               </div>
             ) : (
@@ -2934,14 +2945,6 @@ function App() {
   };
 
   const renderMainContent = () => {
-    if (activeView === 'dashboard') {
-      return (
-        <div className="main-content dashboard-wrapper">
-          <Dashboard />
-        </div>
-      );
-    }
-    
     if (activeView === 'workflow') {
       return (
         <ReactFlowProvider>
@@ -3584,12 +3587,6 @@ function App() {
                             field={field}
                             fieldIndex={fieldIndex}
                             selectedPageId={selectedPageId}
-                            formPages={formPages}
-                            onUpdateField={updateField}
-                            onDeleteField={deleteField}
-                            generateApiName={generateApiName}
-                            ensureUniqueApiName={ensureUniqueApiName}
-                            zillowConnections={zillowConnections}
                           />
                         ))}
                       </SortableContext>
@@ -3628,12 +3625,9 @@ function App() {
   }
 
   return (
-    <div className={`app ${activeView === 'dashboard' ? 'dashboard-view' : ''}`}>
+    <div className="app">
       {/* Publish Dialog */}
       {showPublishDialog && <PublishDialog />}
-      
-      {/* Webhook Trigger Editor */}
-      {showTriggerEditor && <WebhookTriggerEditor />}
 
       {/* Header */}
       <header className="header">
@@ -3694,7 +3688,6 @@ function App() {
       {/* Navigation */}
       <nav className="nav">
         {[
-          { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
           ...(hasModuleAccess('content') ? [{ id: 'content', icon: Type, label: 'Content' }] : []),
           ...(hasModuleAccess('workflow') ? [{ id: 'workflow', icon: Zap, label: 'Workflow' }] : []),
           ...(hasModuleAccess('connect') ? [{ id: 'connect', icon: Webhook, label: 'Connect' }] : []),

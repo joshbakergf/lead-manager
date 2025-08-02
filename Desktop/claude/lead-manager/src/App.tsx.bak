@@ -1,6 +1,4 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import ContentEditor from './components/ContentEditor';
-import Dashboard from './components/Dashboard';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -48,7 +46,7 @@ import { generateFieldId, generateApiName, ensureUniqueApiName } from './utils/f
 import logoImage from './assets/logo.png';
 import { useAuth } from './contexts/AuthContext';
 import { useAppData } from './hooks/useAppData';
-import { webhookService, scriptService, publishedScriptService } from './lib/firestore';
+import { webhookService, scriptService } from './lib/firestore';
 import { Login } from './components/Login';
 import { UsersView } from './components/UsersView';
 import { RolesView } from './components/RolesView';
@@ -56,7 +54,6 @@ import { PublicPreview } from './components/PublicPreview';
 import { LiveScript } from './components/LiveScript';
 import { EmbeddedPreview } from './components/EmbeddedPreview';
 import { PaymentField } from './components/PaymentField';
-// Dynamic import for Zillow service to avoid initialization issues
 
 import {
   Type,
@@ -78,7 +75,6 @@ import {
   Shield,
   Loader,
   LayoutGrid,
-  BarChart3,
 } from 'lucide-react';
 
 const nodeTypes = {
@@ -145,16 +141,8 @@ const SortableFieldItem = React.memo<{
   }, [selectedPageId, field.id, onUpdateField]);
 
   const handleFieldTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as FieldType;
-    const updates: Partial<FormField> = { type: newType };
-    
-    // Initialize options for dropdown and multiple-choice fields
-    if ((newType === 'dropdown' || newType === 'multiple-choice') && !field.options) {
-      updates.options = ['Option 1', 'Option 2', 'Option 3'];
-    }
-    
-    onUpdateField(selectedPageId, field.id, updates);
-  }, [selectedPageId, field.id, field.options, onUpdateField]);
+    onUpdateField(selectedPageId, field.id, { type: e.target.value as FieldType });
+  }, [selectedPageId, field.id, onUpdateField]);
 
   const handleDeleteField = useCallback(() => {
     onDeleteField(selectedPageId, field.id);
@@ -231,11 +219,9 @@ const SortableFieldItem = React.memo<{
               <option value="rating">Rating</option>
               <option value="file-upload">File Upload</option>
               <option value="enhanced-address">Enhanced Address</option>
-              <option value="credit-card">💳 Credit Card Number</option>
-              <option value="cvv">🔒 CVV</option>
-              <option value="expiry-date">📅 Expiry Date (MMYY)</option>
-              <option value="card-type">💰 Card Type</option>
-              <option value="content-block">📄 Content Block</option>
+              <option value="payment-card">💳 Payment Card</option>
+              <option value="payment-ach">🏦 Payment ACH</option>
+              <option value="payment-wallet">📱 Payment Wallet</option>
             </select>
           </div>
         </div>
@@ -262,208 +248,41 @@ const SortableFieldItem = React.memo<{
             </label>
           </div>
         </div>
-
-        {/* Content Block Configuration */}
-        {field.type === "content-block" && (
-          <div className="field-config-section">
-            <h4>Content Block</h4>
-            <div className="help-text" style={{ marginBottom: "10px", fontSize: "14px", color: "#666" }}>
-              <p>Create rich content with formatted text, images, tables, lists, and more using the WYSIWYG editor below.</p>
-            </div>
-            <ContentEditor
-              value={field.contentValue || ""}
-              onChange={(value) => onUpdateField(selectedPageId, field.id, { contentValue: value })}
-              placeholder="Start typing to create rich content..."
-            />
-          </div>
-        )}
-        
-        {/* Options for dropdown and multiple choice fields */}
-        {(field.type === 'dropdown' || field.type === 'multiple-choice') && (
-          <div className="field-config-section">
-            <h4>Options</h4>
-            <div className="options-list">
-              {field.options?.map((option, optionIndex) => (
-                <div key={optionIndex} className="option-row">
-                  <span>{optionIndex + 1}</span>
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) => {
-                      const newOptions = [...(field.options || [])];
-                      newOptions[optionIndex] = e.target.value;
-                      onUpdateField(selectedPageId, field.id, { options: newOptions });
-                    }}
-                    placeholder={`Option ${optionIndex + 1}`}
-                  />
-                  <button
-                    onClick={() => {
-                      const newOptions = field.options?.filter((_, i) => i !== optionIndex) || [];
-                      onUpdateField(selectedPageId, field.id, { options: newOptions });
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              className="add-option-btn"
-              onClick={() => {
-                const newOptions = [...(field.options || []), ''];
-                onUpdateField(selectedPageId, field.id, { options: newOptions });
-              }}
-            >
-              <Plus size={16} />
-              Add Option
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
 });
 
 function App() {
-  // Check if this is a preview mode based on URL parameters or path
+  // Check if this is a preview mode based on URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  let previewId = urlParams.get('preview');
+  const previewId = urlParams.get('preview');
   const liveId = urlParams.get('live');
-  
-  // Handle /s/ URL format (e.g., /s/scriptId) by extracting scriptId for preview
-  const pathMatch = window.location.pathname.match(/^\/s\/(.+)$/);
-  if (pathMatch && !previewId) {
-    previewId = pathMatch[1];
-    console.log('Detected /s/ URL format, using as preview:', previewId);
-  }
   
   // Get Firestore-integrated data
   const appData = useAppData();
   
-  // Function to get script data from localStorage or published scripts
+  // Function to get script data from localStorage for preview mode
   const getScriptData = (scriptId: string) => {
-    // First try localStorage for working scripts
-    const localData = window.localStorage.getItem(`script-${scriptId}`);
-    if (localData) {
+    const data = window.localStorage.getItem(`script-${scriptId}`);
+    if (data) {
       try {
-        const parsed = JSON.parse(localData);
+        const parsed = JSON.parse(data);
         return {
           pages: parsed.pages || [],
           logicRules: parsed.logicRules || {}
         };
       } catch (err) {
-        console.error('Error parsing local script data:', err);
+        console.error('Error parsing script data:', err);
+        return null;
       }
     }
-
-    // Then check published scripts
-    const publishedScript = appData.publishedScripts.find(script => script.id === scriptId);
-    if (publishedScript) {
-      return {
-        pages: publishedScript.pages || [],
-        logicRules: {} // Published scripts don't store logic rules
-      };
-    }
-
-    // For live scripts, provide a default demo script if none found
-    if (scriptId.startsWith('live-')) {
-      console.log('Live script not found, providing demo script:', scriptId);
-      return {
-        pages: [
-          {
-            id: 'welcome',
-            type: 'form' as const,
-            title: 'Demo Form',
-            fields: [
-              {
-                id: 'name',
-                type: 'text' as const,
-                label: 'Your Name',
-                required: true,
-                apiName: 'name'
-              },
-              {
-                id: 'email',
-                type: 'email' as const,
-                label: 'Email Address', 
-                required: true,
-                apiName: 'email'
-              }
-            ]
-          }
-        ],
-        logicRules: {}
-      };
-    }
-
     return null;
   };
   
   // If preview mode, show the public preview component
   if (previewId) {
-    // Enhanced getScriptData for preview that includes a fallback
-    const getPreviewScriptData = (scriptId: string) => {
-      const scriptData = getScriptData(scriptId);
-      if (scriptData) {
-        return scriptData;
-      }
-      
-      // Fallback demo script for preview if no script found
-      console.log('No script found for preview, providing demo script');
-      return {
-        pages: [
-          {
-            id: 'welcome',
-            type: 'welcome' as const,
-            title: 'Demo Preview Form',
-            content: 'This is a demo form for preview purposes.',
-            visible: true
-          },
-          {
-            id: 'form',
-            type: 'form' as const,
-            title: 'Contact Information',
-            fields: [
-              {
-                id: 'name',
-                type: 'text' as const,
-                label: 'Full Name',
-                required: true,
-                apiName: 'name'
-              },
-              {
-                id: 'email',
-                type: 'email' as const,
-                label: 'Email Address',
-                required: true,
-                apiName: 'email'
-              },
-              {
-                id: 'phone',
-                type: 'tel' as const,
-                label: 'Phone Number',
-                required: false,
-                apiName: 'phone'
-              }
-            ],
-            visible: true
-          },
-          {
-            id: 'thank-you',
-            type: 'ending' as const,
-            title: 'Thank You!',
-            content: 'Thank you for testing the demo preview.',
-            visible: true
-          }
-        ],
-        logicRules: {
-          'welcome': 'form',
-          'form': 'thank-you'
-        }
-      };
-    };
-    
-    return <PublicPreview getScriptData={getPreviewScriptData} />;
+    return <PublicPreview getScriptData={getScriptData} />;
   }
   
   // If live mode, show the live script component
@@ -508,7 +327,7 @@ function App() {
   }
 
   const { isAuthenticated, isLoading, user, logout, hasModuleAccess, hasPermission } = useAuth();
-  const [activeView, setActiveView] = useState<'dashboard' | 'content' | 'workflow' | 'connect' | 'share' | 'data' | 'users' | 'roles'>('dashboard');
+  const [activeView, setActiveView] = useState<'content' | 'workflow' | 'connect' | 'share' | 'data' | 'users' | 'roles'>('content');
 
   // Load webhooks from Firestore on app start
   React.useEffect(() => {
@@ -530,32 +349,23 @@ function App() {
     loadWebhooks();
   }, [isAuthenticated]);
 
-  // Zillow integration temporarily disabled due to initialization conflicts
-  // TODO: Re-implement Zillow integration with proper error handling
-
   // Check if current view is accessible, if not redirect to first available
   const getValidActiveView = () => {
     if (!isAuthenticated || !user) return activeView;
-    
-    // Dashboard is always accessible to all authenticated users
-    if (activeView === 'dashboard') {
-      return activeView;
-    }
     
     const currentModuleId = activeView === 'data' ? 'leads' : activeView;
     if (hasModuleAccess(currentModuleId)) {
       return activeView;
     }
     
-    // Find first available module, with dashboard as the first option
-    const availableModules = ['dashboard', 'share', 'data', 'content', 'workflow', 'connect', 'users', 'roles'] as const;
+    // Find first available module
+    const availableModules = ['share', 'data', 'content', 'workflow', 'connect', 'users', 'roles'] as const;
     const firstAvailable = availableModules.find(module => {
-      if (module === 'dashboard') return true; // Dashboard is always available
       const moduleId = module === 'data' ? 'leads' : module;
       return hasModuleAccess(moduleId);
     });
     
-    return firstAvailable || 'dashboard'; // Fallback to dashboard
+    return firstAvailable || 'share'; // Fallback to share
   };
 
   const validActiveView = getValidActiveView();
@@ -669,9 +479,9 @@ function App() {
   // Zillow connections state
   const [zillowConnections, setZillowConnections] = useState<ZillowConnection[]>([
     {
-      id: 'zillow-prod',
-      name: 'Production Zillow API',
-      apiKey: '720c9f75b4mshc000a48d1ab5353p1e9212jsnfda95ae44e14',
+      id: 'zillow-mock',
+      name: 'Mock Zillow Data',
+      apiKey: '',
       apiProvider: 'rapidapi',
       apiUrl: 'https://zillow-com1.p.rapidapi.com',
       rateLimit: 500,
@@ -679,15 +489,11 @@ function App() {
       createdAt: new Date().toISOString()
     }
   ]);
-  const [selectedZillowConnectionId, setSelectedZillowConnectionId] = useState<string | null>('zillow-prod');
+  const [selectedZillowConnectionId, setSelectedZillowConnectionId] = useState<string | null>('zillow-mock');
   const [showCreateZillowConnection, setShowCreateZillowConnection] = useState(false);
   
   // Submission viewing state
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
-
-  // Webhook trigger editing state
-  const [showTriggerEditor, setShowTriggerEditor] = useState(false);
-  const [selectedTrigger, setSelectedTrigger] = useState<WebhookTrigger | null>(null);
   
   // Leads table filters
   const [leadsFilters, setLeadsFilters] = useState({
@@ -909,11 +715,8 @@ function App() {
           trigger,
           connection: webhookConnections.find(conn => conn.id === trigger.connectionId),
           onEdit: (triggerId: string) => {
-            const trigger = webhookTriggers.find(t => t.id === triggerId);
-            if (trigger) {
-              setSelectedTrigger(trigger);
-              setShowTriggerEditor(true);
-            }
+            // TODO: Open trigger edit modal
+            console.log('Edit trigger:', triggerId);
           },
         },
       }));
@@ -1164,22 +967,15 @@ function App() {
     // Generate a temporary script ID for the live session
     const liveScriptId = 'live-' + Date.now();
     
-    console.log('Starting live call with script:', script);
-    console.log('Script pages:', script.pages);
-    
-    // Ensure we have valid pages data
-    const pages = script.pages && script.pages.length > 0 ? script.pages : formPages;
-    console.log('Using pages for live script:', pages);
-    
     // Store the script data for the live session (now using Firestore)
     await saveScript({ 
-      pages: pages,
+      pages: script.pages,
       logicRules: {}, // Could include script logic rules if available
-      title: script.name || 'Live Script',
-      description: script.description || 'Live script for calling'
+      title: script.name,
+      description: script.description
     }, liveScriptId);
     
-    // Create live URL with query parameter format (same as preview)
+    // Create live URL with query parameter
     const liveUrl = `${window.location.origin}?live=${liveScriptId}`;
     
     // Open live script in new tab
@@ -1926,7 +1722,7 @@ function App() {
     settings?: Partial<PublishedScript['settings']>;
   }) => {
     const scriptId = `script-${Date.now()}`;
-    const accessUrl = `/s/${scriptId}`;
+    const accessUrl = `/published/${scriptId}`;
     
     const newScript: PublishedScript = {
       id: scriptId,
@@ -1955,18 +1751,9 @@ function App() {
     
     // Save to Firestore using the hook function
     await publishScript(newScript);
-    
-    // Also save to localStorage for immediate access/preview
-    const localScriptData = {
-      title: newScript.name,
-      pages: newScript.pages,
-      webhookConnections: newScript.webhookConnections || []
-    };
-    window.localStorage.setItem(`script-${scriptId}`, JSON.stringify(localScriptData));
-    
     setShowPublishDialog(false);
     
-    console.log('Published script to Firestore and localStorage:', newScript);
+    console.log('Published script to Firestore:', newScript);
     return newScript;
   };
 
@@ -1980,19 +1767,8 @@ function App() {
     );
   };
 
-  const deletePublishedScript = async (scriptId: string) => {
-    try {
-      // First, delete from Firestore
-      await publishedScriptService.deletePublishedScript(scriptId);
-      
-      // Then update local state
-      setPublishedScripts(prev => prev.filter(script => script.id !== scriptId));
-      
-      console.log('Published script deleted successfully:', scriptId);
-    } catch (error) {
-      console.error('Failed to delete published script:', error);
-      alert('Failed to delete script. Please try again.');
-    }
+  const deletePublishedScript = (scriptId: string) => {
+    setPublishedScripts(prev => prev.filter(script => script.id !== scriptId));
   };
 
   const republishScript = (scriptId: string) => {
@@ -2056,6 +1832,7 @@ function App() {
             deletePage(page.id);
           }}
           onMouseDown={(e) => e.stopPropagation()}
+          title={`Delete ${page.name}`}
         >
           <Trash2 size={14} />
         </button>
@@ -2065,203 +1842,483 @@ function App() {
 
   // SortableFieldItem is now defined outside App component
 
-  // Webhook Trigger Editor Component
-  const WebhookTriggerEditor = () => {
-    if (!selectedTrigger) return null;
+    const handleApiNameBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+      const sanitizedApiName = ensureUniqueApiName(e.target.value, 
+        formPages.find(p => p.id === selectedPageId)?.fields || [], 
+        field.id
+      );
+      if (sanitizedApiName !== e.target.value) {
+        const updatedPages = formPages.map(p => 
+          p.id === selectedPageId ? {
+            ...p,
+            fields: p.fields?.map(f => 
+              f.id === field.id ? { ...f, apiName: sanitizedApiName } : f
+            )
+          } : p
+        );
+        setFormPages(updatedPages);
+      }
+    }, [formPages, selectedPageId, field.id]);
 
-    const [formData, setFormData] = useState({
-      name: selectedTrigger.name,
-      connectionId: selectedTrigger.connectionId,
-      triggerType: selectedTrigger.triggerType,
-      isActive: selectedTrigger.isActive,
-      targetPageId: '', // New field to specify which page this trigger should connect to
-      condition: selectedTrigger.condition || { condition: 'equals', value: '', nextPageId: '' }
-    });
+    const handlePlaceholderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      updateField(selectedPageId, field.id, { placeholder: e.target.value });
+    }, [selectedPageId, field.id, updateField]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
+    const handleFieldTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+      const newType = e.target.value as any;
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { ...f, type: newType } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
 
-      const updatedTrigger: WebhookTrigger = {
-        ...selectedTrigger,
-        name: formData.name,
-        connectionId: formData.connectionId,
-        triggerType: formData.triggerType,
-        isActive: formData.isActive,
-        condition: formData.triggerType === 'conditional' ? formData.condition : undefined
+    const handleDeleteField = useCallback(() => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.filter(f => f.id !== field.id)
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
+
+    const handleRequiredChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { ...f, required: e.target.checked } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
+
+    const handleChoiceTextChange = useCallback((choiceId: string, newText: string) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? {
+              ...f,
+              choices: f.choices?.map(c => 
+                c.id === choiceId ? { ...c, text: newText } : c
+              )
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
+
+    const handleDeleteChoice = useCallback((choiceId: string) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? {
+              ...f,
+              choices: f.choices?.filter(c => c.id !== choiceId)
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
+
+    const handleAddChoice = useCallback(() => {
+      const newChoice = { 
+        id: `choice-${Date.now()}`, 
+        text: `Option ${(field.choices?.length || 0) + 1}` 
       };
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? {
+              ...f,
+              choices: [...(f.choices || []), newChoice]
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id, field.choices]);
 
-      updateWebhookTrigger(selectedTrigger.id, updatedTrigger);
+    const handlePaymentAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { 
+              ...f, 
+              paymentAmount: parseFloat(e.target.value) || 0
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
 
-      // If a target page is specified, create a connection
-      if (formData.targetPageId) {
-        const ruleKey = `${selectedTrigger.id}-to-${formData.targetPageId}`;
-        setLogicRules(prev => ({
-          ...prev,
-          [ruleKey]: formData.targetPageId
-        }));
-      }
+    const handlePaymentCurrencyChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { 
+              ...f, 
+              paymentCurrency: e.target.value
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
 
-      setShowTriggerEditor(false);
-      setSelectedTrigger(null);
-    };
+    const handleApplePayChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { 
+              ...f, 
+              merchantConfig: {
+                ...f.merchantConfig,
+                enableApplePay: e.target.checked
+              }
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
 
-    const handleCancel = () => {
-      setShowTriggerEditor(false);
-      setSelectedTrigger(null);
-    };
+    const handleGooglePayChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { 
+              ...f, 
+              merchantConfig: {
+                ...f.merchantConfig,
+                enableGooglePay: e.target.checked
+              }
+            } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
 
-    const handleDelete = () => {
-      if (confirm('Are you sure you want to delete this webhook trigger?')) {
-        deleteWebhookTrigger(selectedTrigger.id);
-        setShowTriggerEditor(false);
-        setSelectedTrigger(null);
-      }
-    };
+    const handlePropertyPreviewChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { ...f, showPropertyPreview: e.target.checked } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
+
+    const handleZillowConnectionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+      const updatedPages = formPages.map(p => 
+        p.id === selectedPageId ? {
+          ...p,
+          fields: p.fields?.map(f => 
+            f.id === field.id ? { ...f, zillowConnectionId: e.target.value } : f
+          )
+        } : p
+      );
+      setFormPages(updatedPages);
+    }, [formPages, selectedPageId, field.id]);
 
     return (
-      <div className="modal-overlay" style={{ zIndex: 9999 }}>
-        <div className="modal-content webhook-trigger-editor">
-          <div className="modal-header">
-            <h2>Edit Webhook Trigger</h2>
-            <button onClick={handleCancel} className="close-btn">
-              <X size={20} />
-            </button>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`field-editor ${isDragging ? 'dragging' : ''}`}
+      >
+        <div className="field-header">
+          <div 
+            className="field-drag-handle"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical size={16} />
+          </div>
+          <span className="field-number">{fieldIndex + 1}</span>
+          <input
+            type="text"
+            className="field-label-input"
+            value={field.label}
+            key={`field-label-${field.id}`}
+            onChange={handleLabelChange}
+            placeholder="Field label..."
+          />
+          <button
+            className="delete-field-btn"
+            onClick={handleDeleteField}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+
+        <div className="field-config">
+          <div className="field-meta-section">
+            <div className="field-id-display">
+              <label>Field ID</label>
+              <code className="field-id-code">{field.id}</code>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="trigger-form">
-            <div className="form-section">
-              <h3>Trigger Details</h3>
-              
-              <div className="form-group">
-                <label>Trigger Name *</label>
+          <div className="field-config-row">
+            <div className="field-config-item">
+              <label>API Name</label>
+              <input
+                type="text"
+                value={field.apiName}
+                key={`api-name-${field.id}`}
+                onChange={handleApiNameChange}
+                onBlur={handleApiNameBlur}
+                className="api-name-input"
+                placeholder="field_name"
+              />
+            </div>
+            <div className="field-config-item">
+              <label>Field Type</label>
+              <select
+                value={field.type}
+                onChange={handleFieldTypeChange}
+              >
+                <option value="short-text">Short Text</option>
+                <option value="long-text">Long Text</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="url">URL</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="time">Time</option>
+                <option value="multiple-choice">Multiple Choice</option>
+                <option value="checkbox">Checkbox</option>
+                <option value="dropdown">Dropdown</option>
+                <option value="rating">Rating</option>
+                <option value="file-upload">File Upload</option>
+                <option value="enhanced-address">Enhanced Address</option>
+                <option value="payment-card">💳 Payment Card</option>
+                <option value="payment-ach">🏦 Payment ACH</option>
+                <option value="payment-wallet">📱 Payment Wallet</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="field-config-row">
+            <div className="field-config-item">
+              <label>Placeholder Text</label>
+              <input
+                type="text"
+                value={field.placeholder || ''}
+                key={`placeholder-${field.id}`}
+                onChange={handlePlaceholderChange}
+                placeholder="Enter placeholder text..."
+              />
+            </div>
+            <div className="field-config-item">
+              <label className="checkbox-label">
                 <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter trigger name..."
-                  required
+                  type="checkbox"
+                  checked={field.required || false}
+                  onChange={handleRequiredChange}
                 />
-              </div>
+                Required field
+              </label>
+            </div>
+          </div>
 
-              <div className="form-group">
-                <label>Webhook Connection *</label>
-                <select
-                  value={formData.connectionId}
-                  onChange={(e) => setFormData({ ...formData, connectionId: e.target.value })}
-                  required
+          {(field.type === 'multiple-choice' || field.type === 'checkbox' || field.type === 'dropdown') && (
+            <div className="field-choices-section">
+              <label>Options</label>
+              <div className="choices-list">
+                {field.choices?.map((choice) => (
+                  <div key={choice.id} className="choice-item">
+                    <ChoiceTextInput
+                      choice={choice}
+                      onTextChange={handleChoiceTextChange}
+                    />
+                    <button
+                      onClick={() => handleDeleteChoice(choice.id)}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  className="add-choice-btn"
+                  onClick={handleAddChoice}
                 >
-                  <option value="">Select a connection...</option>
-                  {webhookConnections.map(conn => (
-                    <option key={conn.id} value={conn.id}>
-                      {conn.name} {!conn.isActive ? '(Inactive)' : ''}
-                    </option>
-                  ))}
-                </select>
+                  <Plus size={12} />
+                  Add Option
+                </button>
+              </div>
+            </div>
+          )}
+
+          {(field.type === 'payment-card' || field.type === 'payment-ach' || field.type === 'payment-wallet') && (
+            <div className="field-payment-section">
+              <label>Payment Settings</label>
+              
+              <div className="field-config-row">
+                <div className="field-config-item">
+                  <label>Payment Amount ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={field.paymentAmount || ''}
+                    onChange={handlePaymentAmountChange}
+                    placeholder="0.00"
+                  />
+                </div>
+                
+                <div className="field-config-item">
+                  <label>Currency</label>
+                  <select
+                    value={field.paymentCurrency || 'USD'}
+                    onChange={handlePaymentCurrencyChange}
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="CAD">CAD (C$)</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Trigger Type *</label>
-                <select
-                  value={formData.triggerType}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    triggerType: e.target.value as 'on_entry' | 'on_exit' | 'conditional'
-                  })}
-                  required
-                >
-                  <option value="on_entry">On Entry - Fires when user enters a page</option>
-                  <option value="on_exit">On Exit - Fires when user leaves a page</option>
-                  <option value="conditional">Conditional - Fires based on form data</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Target Page</label>
-                <select
-                  value={formData.targetPageId}
-                  onChange={(e) => setFormData({ ...formData, targetPageId: e.target.value })}
-                >
-                  <option value="">Select which page triggers this webhook...</option>
-                  {formPages.map(page => (
-                    <option key={page.id} value={page.id}>
-                      {page.title} ({page.type})
-                    </option>
-                  ))}
-                </select>
-                <small>Choose which page this webhook should be connected to in the workflow</small>
-              </div>
-
-              {formData.triggerType === 'conditional' && (
-                <div className="conditional-section">
-                  <h4>Conditional Logic</h4>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Condition</label>
-                      <select
-                        value={formData.condition.condition}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          condition: {
-                            ...formData.condition,
-                            condition: e.target.value as 'equals' | 'contains' | 'greater_than' | 'less_than' | 'any'
-                          }
-                        })}
-                      >
-                        <option value="equals">Equals</option>
-                        <option value="contains">Contains</option>
-                        <option value="greater_than">Greater Than</option>
-                        <option value="less_than">Less Than</option>
-                        <option value="any">Any Value</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Value</label>
+              {field.type === 'payment-wallet' && (
+                <div className="field-config-row">
+                  <div className="field-config-item">
+                    <label className="checkbox-label">
                       <input
-                        type="text"
-                        value={formData.condition.value}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          condition: {
-                            ...formData.condition,
-                            value: e.target.value
-                          }
-                        })}
-                        placeholder="Enter comparison value..."
+                        type="checkbox"
+                        checked={field.merchantConfig?.enableApplePay || false}
+                        onChange={handleApplePayChange}
                       />
-                    </div>
+                      <span>Enable Apple Pay</span>
+                    </label>
+                  </div>
+                  
+                  <div className="field-config-item">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={field.merchantConfig?.enableGooglePay || false}
+                        onChange={handleGooglePayChange}
+                      />
+                      <span>Enable Google Pay</span>
+                    </label>
                   </div>
                 </div>
               )}
+            </div>
+          )}
 
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                  Active (trigger will fire when conditions are met)
-                </label>
+          {field.type === 'enhanced-address' && (
+            <div className="field-enhanced-address-section">
+              <label>Enhanced Address Settings</label>
+              
+              <div className="field-config-row">
+                <div className="field-config-item">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={field.showPropertyPreview || false}
+                      onChange={handlePropertyPreviewChange}
+                    />
+                    Show property preview card
+                  </label>
+                </div>
+              </div>
+
+              <div className="field-config-row">
+                <div className="field-config-item">
+                  <label>Zillow Connection</label>
+                  <select
+                    value={field.zillowConnectionId || ''}
+                    onChange={handleZillowConnectionChange}
+                  >
+                    <option value="">Use default connection</option>
+                    {zillowConnections.map(conn => (
+                      <option key={conn.id} value={conn.id}>
+                        {conn.name} {conn.isActive ? '' : '(Inactive)'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="field-config-row">
+                <label>Auto-populate Fields</label>
+                <div className="auto-populate-info">
+                  When a property is selected, these fields will be automatically populated:
+                </div>
+                <div className="auto-populate-fields">
+                  {formPages.find(p => p.id === selectedPageId)?.fields
+                    ?.filter(f => f.id !== field.id && (f.type === 'short-text' || f.type === 'number'))
+                    .map(targetField => (
+                      <label key={targetField.id} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={!!field.autoPopulateFields?.[targetField.apiName]}
+                          onChange={(e) => {
+                            const autoPopulate = { ...(field.autoPopulateFields || {}) };
+                            if (e.target.checked) {
+                              // Map common field names to property data keys
+                              let propertyKey = '';
+                              const apiNameLower = targetField.apiName.toLowerCase();
+                              if (apiNameLower.includes('sqft') || apiNameLower.includes('square')) {
+                                propertyKey = 'sqft';
+                              } else if (apiNameLower.includes('lot')) {
+                                propertyKey = 'lotSize';
+                              } else if (apiNameLower.includes('year')) {
+                                propertyKey = 'yearBuilt';
+                              } else if (apiNameLower.includes('bed')) {
+                                propertyKey = 'bedrooms';
+                              } else if (apiNameLower.includes('bath')) {
+                                propertyKey = 'bathrooms';
+                              }
+                              
+                              if (propertyKey) {
+                                autoPopulate[targetField.apiName] = propertyKey;
+                              }
+                            } else {
+                              delete autoPopulate[targetField.apiName];
+                            }
+                            
+                            const updatedPages = formPages.map(p => 
+                              p.id === selectedPageId ? {
+                                ...p,
+                                fields: p.fields?.map(f => 
+                                  f.id === field.id ? { ...f, autoPopulateFields: autoPopulate } : f
+                                )
+                              } : p
+                            );
+                            setFormPages(updatedPages);
+                          }}
+                        />
+                        {targetField.label} ({targetField.apiName})
+                      </label>
+                    ))
+                  }
+                </div>
               </div>
             </div>
-
-            <div className="form-actions">
-              <button 
-                type="button" 
-                onClick={handleDelete}
-                className="btn btn-danger"
-                style={{ marginRight: 'auto' }}
-              >
-                Delete Trigger
-              </button>
-              <button type="button" onClick={handleCancel} className="btn btn-secondary">
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Save Changes
-              </button>
-            </div>
-          </form>
+          )}
         </div>
       </div>
     );
@@ -2514,9 +2571,6 @@ function App() {
 
   const renderSidebar = () => {
     switch (validActiveView) {
-      case 'dashboard':
-        return null; // Dashboard doesn't need a sidebar
-        
       case 'content':
         return (
           <div className="sidebar">
@@ -2679,21 +2733,21 @@ function App() {
                     </div>
                   ) : selectedPage.type === 'form' && selectedPage.fields ? (
                     <div className="logic-rules">
-                      {/* Show choice-based routing for form fields with options */}
+                      {/* Show choice-based routing for form fields with choices */}
                       {selectedPage.fields
-                        .filter(field => (field.options && field.options.length > 0) || (field.choices && field.choices.length > 0))
+                        .filter(field => field.choices && field.choices.length > 0)
                         .map(field => (
                           <div key={field.id} className="field-logic-group">
                             <h5 className="field-logic-title">{field.label}</h5>
-                            {(field.options || field.choices)?.map(option => {
-                              const ruleKey = `${selectedPage.id}-${field.id}-${option.id}`;
+                            {field.choices?.map(choice => {
+                              const ruleKey = `${selectedPage.id}-${field.id}-${choice.id}`;
                               const currentTarget = logicRules[ruleKey] || 'end';
                               
                               return (
-                                <div key={option.id} className="logic-rule">
+                                <div key={choice.id} className="logic-rule">
                                   <div className="rule-condition">
                                     <span className="condition-label">If customer selects:</span>
-                                    <span className="condition-value">"{option.text || option.label}"</span>
+                                    <span className="condition-value">"{choice.text}"</span>
                                   </div>
                                   <div className="rule-action">
                                     <span className="action-label">Go to:</span>
@@ -2717,7 +2771,7 @@ function App() {
                         ))}
                       
                       {/* Default flow for pages without conditional routing */}
-                      {selectedPage.fields.filter(field => (field.options && field.options.length > 0) || (field.choices && field.choices.length > 0)).length === 0 && (
+                      {selectedPage.fields.filter(field => field.choices && field.choices.length > 0).length === 0 && (
                         <div className="logic-rule">
                           <div className="rule-condition">
                             <span className="condition-label">Page flow:</span>
@@ -2934,14 +2988,6 @@ function App() {
   };
 
   const renderMainContent = () => {
-    if (activeView === 'dashboard') {
-      return (
-        <div className="main-content dashboard-wrapper">
-          <Dashboard />
-        </div>
-      );
-    }
-    
     if (activeView === 'workflow') {
       return (
         <ReactFlowProvider>
@@ -3628,12 +3674,9 @@ function App() {
   }
 
   return (
-    <div className={`app ${activeView === 'dashboard' ? 'dashboard-view' : ''}`}>
+    <div className="app">
       {/* Publish Dialog */}
       {showPublishDialog && <PublishDialog />}
-      
-      {/* Webhook Trigger Editor */}
-      {showTriggerEditor && <WebhookTriggerEditor />}
 
       {/* Header */}
       <header className="header">
@@ -3694,7 +3737,6 @@ function App() {
       {/* Navigation */}
       <nav className="nav">
         {[
-          { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
           ...(hasModuleAccess('content') ? [{ id: 'content', icon: Type, label: 'Content' }] : []),
           ...(hasModuleAccess('workflow') ? [{ id: 'workflow', icon: Zap, label: 'Workflow' }] : []),
           ...(hasModuleAccess('connect') ? [{ id: 'connect', icon: Webhook, label: 'Connect' }] : []),
